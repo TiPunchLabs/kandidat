@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}kandidat{% endblock %}</title>
+  <script>(function(){var t=localStorage.getItem('kandidat-theme')||'precision';document.documentElement.setAttribute('data-theme',t)})();</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Lexend:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='themes.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%23E8590C'/><text x='50' y='72' font-size='60' text-anchor='middle' fill='white' font-family='system-ui'>k</text></svg>">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+  <div class="app-layout">
+    <!-- Mobile header -->
+    <div class="mobile-header">
+      <button class="hamburger-btn" id="sidebar-toggle" aria-label="Menu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <span style="font-family:var(--font-display);font-weight:700;font-size:0.95rem">kandidat</span>
+    </div>
+
+    <!-- Sidebar overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-mark">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+        </span>
+        kandidat
+      </div>
+
+      <div class="sidebar-search">
+        <a href="{{ url_for('main.search') }}" class="sidebar-search-input">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Rechercher...
+          <kbd>/</kbd>
+        </a>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="sidebar-section-label">Navigation</div>
+        <a class="sidebar-nav-item {% if request.endpoint == 'main.dashboard' %}active{% endif %}" href="{{ url_for('main.dashboard') }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+          </svg>
+          Dashboard
+        </a>
+        <a class="sidebar-nav-item {% if request.endpoint == 'main.create_candidature_form' %}active{% endif %}" href="{{ url_for('main.create_candidature_form') }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Nouvelle
+        </a>
+        <a class="sidebar-nav-item {% if request.endpoint == 'main.stats' %}active{% endif %}" href="{{ url_for('main.stats') }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+          </svg>
+          Statistiques
+        </a>
+        <a class="sidebar-nav-item {% if request.endpoint == 'main.cibles' %}active{% endif %}" href="{{ url_for('main.cibles') }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+          </svg>
+          Cibles
+        </a>
+        <a class="sidebar-nav-item {% if request.endpoint == 'main.search' %}active{% endif %}" href="{{ url_for('main.search') }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          Recherche
+        </a>
+        <a class="sidebar-nav-item {% if request.endpoint == 'main.settings_page' %}active{% endif %}" href="{{ url_for('main.settings_page') }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Parametres
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="theme-switcher" role="radiogroup" aria-label="Theme">
+          <button class="theme-swatch theme-swatch--precision" data-theme="precision" role="radio" aria-checked="true" aria-label="Precision" title="Precision"></button>
+          <button class="theme-swatch theme-swatch--vibrant" data-theme="vibrant" role="radio" aria-checked="false" aria-label="Vibrant" title="Vibrant"></button>
+          <button class="theme-swatch theme-swatch--dark" data-theme="dark" role="radio" aria-checked="false" aria-label="Dark" title="Dark"></button>
+          <button class="theme-swatch theme-swatch--pastel" data-theme="pastel" role="radio" aria-checked="false" aria-label="Pastel" title="Pastel"></button>
+        </div>
+        <span class="sidebar-version">v0.1.0</span>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content" id="main-content">
+      <div class="main-container">
+        <div id="flash-messages" aria-live="polite">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  <!-- Confirm modal (reusable) -->
+  <div class="confirm-overlay" id="confirm-overlay">
+    <div class="confirm-modal" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+      <div class="confirm-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h4 class="confirm-title" id="confirm-title"></h4>
+      <p class="confirm-message" id="confirm-message"></p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="confirm-cancel">Annuler</button>
+        <button type="button" class="btn btn-sm confirm-btn-danger" id="confirm-ok">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/htmx.org@2.0.4"
+          integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Sidebar toggle (mobile)
+    (function() {
+      var toggle = document.getElementById('sidebar-toggle');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebar-overlay');
+
+      function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+      }
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+      }
+
+      if (toggle) toggle.addEventListener('click', openSidebar);
+      if (overlay) overlay.addEventListener('click', closeSidebar);
+    })();
+
+    // "/" keyboard shortcut to focus search
+    document.addEventListener('keydown', function(e) {
+      if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        var searchLink = document.querySelector('.sidebar-search-input');
+        if (searchLink) window.location.href = searchLink.href;
+      }
+    });
+
+    // Reusable confirm modal
+    // options: { okLabel: string, variant: 'danger'|'warning' }
+    window.confirmModal = function(title, message, options) {
+      options = options || {};
+      return new Promise(function(resolve) {
+        var overlay = document.getElementById('confirm-overlay');
+        var titleEl = document.getElementById('confirm-title');
+        var msgEl = document.getElementById('confirm-message');
+        var okBtn = document.getElementById('confirm-ok');
+        var cancelBtn = document.getElementById('confirm-cancel');
+        var iconEl = document.querySelector('.confirm-icon');
+
+        titleEl.textContent = title;
+        msgEl.innerHTML = message;
+        okBtn.textContent = options.okLabel || 'Supprimer';
+
+        // Variant styling
+        okBtn.className = 'btn btn-sm ' + (options.variant === 'warning' ? 'confirm-btn-warning' : 'confirm-btn-danger');
+        iconEl.className = 'confirm-icon' + (options.variant === 'warning' ? ' confirm-icon--warning' : '');
+
+        overlay.classList.add('active');
+        okBtn.focus();
+
+        function close(result) {
+          overlay.classList.remove('active');
+          okBtn.removeEventListener('click', onOk);
+          cancelBtn.removeEventListener('click', onCancel);
+          document.removeEventListener('keydown', onKey);
+          resolve(result);
+        }
+        function onOk() { close(true); }
+        function onCancel() { close(false); }
+        function onKey(e) {
+          if (e.key === 'Escape') close(false);
+        }
+
+        okBtn.addEventListener('click', onOk);
+        cancelBtn.addEventListener('click', onCancel);
+        document.addEventListener('keydown', onKey);
+        overlay.addEventListener('click', function handler(e) {
+          if (e.target === overlay) { close(false); overlay.removeEventListener('click', handler); }
+        });
+      });
+    };
+  </script>
+  <script>
+    // Loading state for non-HTMX form submit buttons
+    document.addEventListener('submit', function(e) {
+      var form = e.target;
+      // Skip forms handled by confirmModal (they submit programmatically)
+      if (form.classList.contains('file-delete-form') ||
+          form.classList.contains('candidature-delete-form') ||
+          form.classList.contains('candidature-archive-form') ||
+          form.classList.contains('cible-delete-form') ||
+          form.classList.contains('cible-page-delete-form') ||
+          form.classList.contains('contact-delete-form')) return;
+      // Skip HTMX forms (handled by CSS htmx-request states)
+      if (form.hasAttribute('hx-post') || form.hasAttribute('hx-get')) return;
+      var btn = form.querySelector('button[type="submit"]');
+      if (btn && !btn.classList.contains('btn--loading')) {
+        btn.classList.add('btn--loading');
+        btn.disabled = true;
+      }
+    });
+  </script>
+  <script>
+    // Auto-dismiss flash messages after 5s
+    function autoDismissFlash() {
+      document.querySelectorAll('#flash-messages .alert').forEach(function(el) {
+        if (el.dataset.autoDismiss) return;
+        el.dataset.autoDismiss = '1';
+        setTimeout(function() {
+          el.style.transition = 'opacity 0.3s';
+          el.style.opacity = '0';
+          setTimeout(function() { el.remove(); }, 300);
+        }, 5000);
+      });
+    }
+    autoDismissFlash();
+    document.addEventListener('htmx:afterSettle', autoDismissFlash);
+  </script>
+  <script>
+    // Theme switcher
+    (function() {
+      var current = localStorage.getItem('kandidat-theme') || 'precision';
+      var swatches = document.querySelectorAll('.theme-swatch');
+
+      // Set initial aria-checked state
+      swatches.forEach(function(s) {
+        s.setAttribute('aria-checked', s.dataset.theme === current ? 'true' : 'false');
+      });
+
+      swatches.forEach(function(swatch) {
+        swatch.addEventListener('click', function() {
+          var theme = this.dataset.theme;
+
+          // Add transition class for smooth switch
+          document.documentElement.classList.add('theme-transitioning');
+
+          // Apply theme
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('kandidat-theme', theme);
+
+          // Update aria-checked
+          swatches.forEach(function(s) {
+            s.setAttribute('aria-checked', s.dataset.theme === theme ? 'true' : 'false');
+          });
+
+          // Remove transition class after animation completes
+          setTimeout(function() {
+            document.documentElement.classList.remove('theme-transitioning');
+          }, 350);
+        });
+      });
+    })();
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

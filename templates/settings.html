@@ -1,0 +1,368 @@
+{% extends "base.html" %}
+
+{% block title %}Parametres - kandidat{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active">Parametres</li>
+  </ol>
+</nav>
+
+<div class="page-header">
+  <h1>Parametres</h1>
+</div>
+
+<div class="row g-4">
+  <!-- CV de reference -->
+  <div class="col-md-6">
+    <div class="card animate-in">
+      <div class="card-header"><h5>CV de reference</h5></div>
+      <div class="card-body">
+        {% if cv_reference_configured %}
+          <div class="alert alert-success mb-3">
+            CV de reference configure
+            {% if cv_reference_date %}
+              <small class="d-block text-muted">Mis a jour le {{ cv_reference_date }}</small>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="alert alert-warning mb-3">
+            Aucun CV de reference configure. Uploadez un fichier HTML pour commencer.
+          </div>
+        {% endif %}
+
+        {% if cv_reference_configured %}
+        <div class="mb-3">
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openCVPreview()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+            Visualiser
+          </button>
+        </div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('main.upload_cv_reference_route') }}" enctype="multipart/form-data"
+              hx-post="{{ url_for('main.upload_cv_reference_route') }}"
+              hx-target="#flash-messages"
+              hx-swap="innerHTML"
+              hx-encoding="multipart/form-data"
+              hx-disabled-elt="find button[type='submit']">
+          <div class="mb-3">
+            <label for="cv-file" class="form-label">Fichier HTML du CV</label>
+            <input type="file" name="file" id="cv-file" class="form-control" accept=".html" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">
+            {% if cv_reference_configured %}Remplacer{% else %}Uploader{% endif %}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fournisseur LLM -->
+  <div class="col-md-6">
+    <div class="card animate-in">
+      <div class="card-header"><h5>Fournisseur LLM</h5></div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('main.update_llm_config') }}"
+              hx-post="{{ url_for('main.update_llm_config') }}"
+              hx-target="#flash-messages"
+              hx-swap="innerHTML"
+              hx-disabled-elt="find button[type='submit']">
+          <div class="mb-3">
+            <label for="llm-provider" class="form-label">Fournisseur</label>
+            <select name="provider" id="llm-provider" class="form-select" onchange="toggleProviderFields()">
+              <option value="ollama" {% if llm_provider == 'ollama' %}selected{% endif %}>Ollama (local)</option>
+              <option value="claude" {% if llm_provider == 'claude' %}selected{% endif %}>Claude (distant)</option>
+            </select>
+          </div>
+
+          <!-- Ollama fields -->
+          <div id="ollama-fields" class="provider-fields">
+            <div class="mb-3">
+              <label for="ollama-url" class="form-label">URL du serveur</label>
+              <input type="url" name="ollama_url" id="ollama-url" class="form-control"
+                     value="{{ llm_ollama_url }}" placeholder="http://localhost:11434">
+            </div>
+            <div class="mb-3">
+              <label for="ollama-model" class="form-label">Modele</label>
+              <select name="ollama_model" id="ollama-model" class="form-select">
+                <option value="{{ llm_ollama_model }}" selected>{{ llm_ollama_model }}</option>
+              </select>
+              <small id="ollama-model-status" class="text-muted"></small>
+            </div>
+          </div>
+
+          <!-- Claude fields -->
+          <div id="claude-fields" class="provider-fields" style="display:none">
+            <div id="claude-privacy-warning" class="alert alert-warning mb-3" style="display:none">
+              <strong>Avertissement :</strong> En utilisant un fournisseur LLM distant, votre CV (contenant des donnees personnelles) sera transmis a un service externe.
+            </div>
+            <div class="mb-3">
+              <label for="claude-api-key" class="form-label">Cle API</label>
+              <input type="password" name="claude_api_key" id="claude-api-key" class="form-control"
+                     placeholder="sk-ant-...">
+              {% if llm_claude_api_key_configured %}
+                <small class="text-muted">Cle API configuree</small>
+              {% endif %}
+            </div>
+            <div class="mb-3">
+              <label for="claude-model" class="form-label">Modele</label>
+              <input type="text" name="claude_model" id="claude-model" class="form-control"
+                     value="{{ llm_claude_model }}" placeholder="claude-sonnet-4-20250514">
+            </div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">Sauvegarder</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="testLLMConnection()">
+              Tester la connexion
+            </button>
+          </div>
+        </form>
+
+        <div id="health-result" class="mt-3" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+  <!-- Recherche web (Tavily) -->
+  <div class="col-md-6">
+    <div class="card animate-in">
+      <div class="card-header"><h5>Recherche web (Tavily)</h5></div>
+      <div class="card-body">
+        {% if tavily_api_key_configured %}
+          <div class="alert alert-success mb-3">Cle API Tavily configuree</div>
+        {% else %}
+          <div class="alert alert-warning mb-3">
+            Aucune cle API Tavily configuree. Necessaire pour l'enrichissement des cibles.
+          </div>
+        {% endif %}
+
+        <form method="post" action="{{ url_for('main.update_tavily_config') }}"
+              hx-post="{{ url_for('main.update_tavily_config') }}"
+              hx-target="#flash-messages"
+              hx-swap="innerHTML"
+              hx-disabled-elt="find button[type='submit']">
+          <div class="mb-3">
+            <label for="tavily-api-key" class="form-label">Cle API Tavily</label>
+            <input type="password" name="tavily_api_key" id="tavily-api-key" class="form-control"
+                   placeholder="tvly-...">
+            <small class="text-muted">Obtenez une cle sur <a href="https://tavily.com" target="_blank" rel="noopener">tavily.com</a></small>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">Sauvegarder</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="testTavilyConnection()">
+              Tester la connexion
+            </button>
+          </div>
+        </form>
+        <div id="tavily-health-result" class="mt-3" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompts LLM -->
+  <div class="col-12">
+    <div class="card animate-in">
+      <div class="card-header">
+        <h5>Prompts d'adaptation LLM</h5>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('main.update_prompts') }}"
+              hx-post="{{ url_for('main.update_prompts') }}"
+              hx-target="#flash-messages"
+              hx-swap="innerHTML"
+              hx-disabled-elt="find button[type='submit']">
+          <div class="mb-3">
+            <label for="system-prompt" class="form-label">System prompt</label>
+            <textarea name="system_prompt" id="system-prompt" class="form-control" rows="8"
+                      placeholder="Instructions systeme pour le LLM...">{{ system_prompt or default_system_prompt }}</textarea>
+            <small class="text-muted">Instructions donnees au LLM pour guider l'adaptation du CV.</small>
+          </div>
+          <div class="mb-3">
+            <label for="user-prompt" class="form-label">Template du prompt utilisateur</label>
+            <textarea name="user_prompt" id="user-prompt" class="form-control" rows="10"
+                      placeholder="Template du prompt utilisateur...">{{ user_prompt_template or default_user_prompt_template }}</textarea>
+            <small class="text-muted">Variables disponibles : <code>{cv_html}</code>, <code>{poste}</code>, <code>{entreprise}</code>, <code>{contenu}</code></small>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm">Sauvegarder les prompts</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetPrompts()">
+              Reinitialiser par defaut
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if cv_reference_configured %}
+<!-- Modale flottante CV preview -->
+<div id="cv-modal-overlay" class="cv-modal-overlay" onclick="closeCVPreview(event)">
+  <div class="cv-modal">
+    <div class="cv-modal-header">
+      <h5>Apercu du CV de reference</h5>
+      <button type="button" class="cv-modal-close" onclick="closeCVPreview()" aria-label="Fermer">&times;</button>
+    </div>
+    <div class="cv-modal-body">
+      <iframe id="cv-preview-frame" sandbox="allow-same-origin" title="Apercu du CV de reference"></iframe>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleProviderFields() {
+  var provider = document.getElementById('llm-provider').value;
+  document.getElementById('ollama-fields').style.display = provider === 'ollama' ? 'block' : 'none';
+  document.getElementById('claude-fields').style.display = provider === 'claude' ? 'block' : 'none';
+
+  if (provider === 'claude') {
+    document.getElementById('claude-privacy-warning').style.display = 'block';
+  }
+}
+
+function testLLMConnection() {
+  var resultDiv = document.getElementById('health-result');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<span class="text-muted">Test en cours...</span>';
+
+  fetch('{{ url_for("api.llm_health_check") }}', { method: 'POST' })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(result) {
+      if (result.ok) {
+        resultDiv.innerHTML = '<div class="alert alert-success mb-0">Fournisseur LLM accessible (' + result.data.data.provider + ')</div>';
+      } else {
+        resultDiv.innerHTML = '<div class="alert alert-danger mb-0">' + (result.data.error || 'Erreur inconnue') + '</div>';
+      }
+    })
+    .catch(function() {
+      resultDiv.innerHTML = '<div class="alert alert-danger mb-0">Erreur de connexion</div>';
+    });
+}
+
+function loadOllamaModels() {
+  var select = document.getElementById('ollama-model');
+  var status = document.getElementById('ollama-model-status');
+  var currentModel = select.value;
+
+  status.textContent = 'Chargement des modeles...';
+  status.className = 'text-muted';
+
+  var ollamaUrl = document.getElementById('ollama-url').value;
+  var fetchUrl = '{{ url_for("api.list_ollama_models") }}' + '?ollama_url=' + encodeURIComponent(ollamaUrl);
+
+  fetch(fetchUrl)
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(result) {
+      if (result.ok && result.data.data.models.length > 0) {
+        var models = result.data.data.models;
+        select.innerHTML = '';
+        var matched = false;
+        models.forEach(function(model) {
+          var opt = document.createElement('option');
+          opt.value = model;
+          opt.textContent = model;
+          var base = model.replace(/:latest$/, '');
+          if (model === currentModel || base === currentModel) {
+            opt.selected = true;
+            matched = true;
+          }
+          select.appendChild(opt);
+        });
+        if (!matched && currentModel) {
+          var opt = document.createElement('option');
+          opt.value = currentModel;
+          opt.textContent = currentModel + ' (non disponible)';
+          opt.selected = true;
+          select.insertBefore(opt, select.firstChild);
+        }
+        status.textContent = models.length + ' modele(s) disponible(s)';
+        status.className = 'text-success';
+      } else {
+        status.textContent = result.data.error || 'Aucun modele disponible';
+        status.className = 'text-danger';
+      }
+    })
+    .catch(function() {
+      status.textContent = 'Impossible de charger les modeles';
+      status.className = 'text-danger';
+    });
+}
+
+// Reload models when Ollama URL changes
+var ollamaUrlInput = document.getElementById('ollama-url');
+var ollamaUrlTimer = null;
+ollamaUrlInput.addEventListener('input', function() {
+  clearTimeout(ollamaUrlTimer);
+  ollamaUrlTimer = setTimeout(loadOllamaModels, 800);
+});
+
+function openCVPreview() {
+  var overlay = document.getElementById('cv-modal-overlay');
+  var frame = document.getElementById('cv-preview-frame');
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  if (!frame.dataset.loaded) {
+    fetch('{{ url_for("api.get_cv_reference") }}')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.data && data.data.cv_html) {
+          frame.srcdoc = data.data.cv_html;
+          frame.dataset.loaded = '1';
+        }
+      });
+  }
+}
+
+function closeCVPreview(event) {
+  if (event && event.target !== event.currentTarget) return;
+  var overlay = document.getElementById('cv-modal-overlay');
+  overlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeCVPreview();
+});
+
+function resetPrompts() {
+  document.getElementById('system-prompt').value = {{ default_system_prompt|tojson }};
+  document.getElementById('user-prompt').value = {{ default_user_prompt_template|tojson }};
+}
+
+function testTavilyConnection() {
+  var resultDiv = document.getElementById('tavily-health-result');
+  resultDiv.style.display = 'block';
+  resultDiv.innerHTML = '<span class="text-muted">Test en cours...</span>';
+
+  fetch('{{ url_for("api.tavily_health_check") }}', { method: 'POST' })
+    .then(function(r) { return r.json().then(function(d) { return { ok: r.ok, data: d }; }); })
+    .then(function(result) {
+      if (result.ok) {
+        resultDiv.innerHTML = '<div class="alert alert-success mb-0">Tavily accessible</div>';
+      } else {
+        resultDiv.innerHTML = '<div class="alert alert-danger mb-0">' + (result.data.error || 'Erreur inconnue') + '</div>';
+      }
+    })
+    .catch(function() {
+      resultDiv.innerHTML = '<div class="alert alert-danger mb-0">Erreur de connexion</div>';
+    });
+}
+
+// Initialize provider fields visibility
+toggleProviderFields();
+
+// Load Ollama models on page load if Ollama is selected
+if (document.getElementById('llm-provider').value === 'ollama') {
+  loadOllamaModels();
+}
+</script>
+{% endblock %}

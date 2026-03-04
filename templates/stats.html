@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Statistiques - kandidat{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Statistiques</h1>
+</div>
+
+<!-- Total KPI -->
+<div class="kpi-strip" style="grid-template-columns:180px">
+  <div class="kpi-card kpi-card--total animate-in">
+    <div class="kpi-value">{{ total }}</div>
+    <div class="kpi-label">Candidatures</div>
+  </div>
+</div>
+
+<div class="row g-3 mb-3">
+  <!-- Par statut (with progress bars) -->
+  <div class="col-md-6">
+    <div class="card animate-in">
+      <div class="card-header">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          Par statut
+        </h5>
+      </div>
+      <div class="card-body">
+        {% for s, count in by_statut.items() %}
+        <div class="stat-bar-row">
+          <div class="stat-bar-label">
+            <span class="badge badge-{{ s }}">{{ s }}</span>
+          </div>
+          <div class="stat-bar-track">
+            <div class="stat-bar-fill stat-bar-fill--{{ s }}" style="width:{{ (count / total * 100) if total > 0 else 0 }}%"></div>
+          </div>
+          <div class="stat-bar-count">{{ count }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Par type + priorite -->
+  <div class="col-md-6">
+    <div class="row g-3">
+      <div class="col-12">
+        <div class="card animate-in">
+          <div class="card-header"><h5>Par type</h5></div>
+          <div class="card-body">
+            {% for t, count in by_type.items() %}
+            <div class="stat-row">
+              <span style="font-size:0.85rem">{{ t }}</span>
+              <span class="stat-count">{{ count }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card animate-in">
+          <div class="card-header"><h5>Par priorite</h5></div>
+          <div class="card-body">
+            {% for p, count in by_priorite.items() %}
+            <div class="stat-row">
+              <span class="priorite-{{ p }}">{{ p }}</span>
+              <span class="stat-count">{{ count }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="card animate-in">
+          <div class="card-header"><h5>Par categorie</h5></div>
+          <div class="card-body">
+            {% for cat, count in by_categorie.items() %}
+            <div class="stat-row">
+              <span class="badge badge-cat-{{ cat }}">{{ cat }}</span>
+              <span class="stat-count">{{ count }}</span>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if timeline %}
+<div class="card animate-in">
+  <div class="card-header">
+    <h5>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      Chronologie
+    </h5>
+  </div>
+  <div class="table-responsive">
+    <table class="table-modern">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Entreprise</th>
+          <th>Poste</th>
+          <th>Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in timeline %}
+        <tr>
+          <td style="font-family:var(--font-mono);font-size:0.8rem">{{ c.date_candidature }}</td>
+          <td><a href="{{ url_for('main.detail', slug=c.slug) }}">{{ c.entreprise }}</a></td>
+          <td>{{ c.poste or '-' }}</td>
+          <td><span class="badge badge-{{ c.statut }}">{{ c.statut }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

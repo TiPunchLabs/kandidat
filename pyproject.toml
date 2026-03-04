@@ -1,0 +1,71 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kandidat"
+version = "0.1.0"
+description = "A personal web interface to track and manage job applications"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.40,<1.0",
+    "beautifulsoup4>=4.12,<5.0",
+    "flask>=3.0,<4.0",
+    "flask-sqlalchemy>=3.1,<4.0",
+    "httpx>=0.27,<1.0",
+    "lxml>=5.1,<6.0",
+    "markdown>=3.5,<4.0",
+    "psycopg[binary]>=3.1,<4.0",
+    "pydantic>=2.0,<3.0",
+    "python-docx>=1.1,<2.0",
+    "tavily-python>=0.5,<1.0",
+    "weasyprint>=62,<64",
+    "gunicorn>=22.0,<24.0",
+]
+
+[project.scripts]
+kandidat = "app:create_app"
+
+[dependency-groups]
+dev = [
+    "bandit>=1.7,<2.0",
+    "pytest>=8.0,<10.0",
+    "pytest-cov>=6.0,<8.0",
+    "ruff>=0.9,<1.0",
+    "pre-commit>=4.0,<5.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["services", "api"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"seed_dev.py" = ["E501"]
+
+[tool.bandit]
+exclude_dirs = ["tests", ".venv"]
+skips = ["B101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+source = ["services", "api", "routes", "app"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 60
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+tag_format = "v$version"

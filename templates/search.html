@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Recherche - kandidat{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Recherche</h1>
+</div>
+
+<form method="GET" action="{{ url_for('main.search') }}" class="mb-3">
+  <div class="search-input-group">
+    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" name="q" id="search-input" class="form-control" placeholder="Rechercher dans les candidatures..."
+           value="{{ query }}" autofocus
+           hx-get="{{ url_for('main.search') }}"
+           hx-trigger="input changed delay:300ms, search"
+           hx-target="#search-results"
+           hx-swap="outerHTML"
+           hx-push-url="true">
+  </div>
+</form>
+
+{% include "partials/search_results.html" %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-focus search input on page load
+(function() {
+  var input = document.getElementById('search-input');
+  if (input && !input.value) input.focus();
+})();
+</script>
+{% endblock %}

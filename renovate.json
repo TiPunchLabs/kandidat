@@ -1,0 +1,19 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "packageRules": [
+    {
+      "groupName": "python dependencies",
+      "matchManagers": ["pip_requirements", "pep621"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": false,
+      "labels": ["dependencies"]
+    },
+    {
+      "groupName": "gitlab-ci",
+      "matchManagers": ["gitlabci"],
+      "labels": ["ci"]
+    }
+  ],
+  "schedule": ["every weekend"]
+}

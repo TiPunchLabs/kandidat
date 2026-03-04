@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Nouvelle candidature - kandidat{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active">Nouvelle candidature</li>
+  </ol>
+</nav>
+
+<div class="page-header">
+  <h1>Nouvelle candidature</h1>
+</div>
+
+<form method="post" action="{{ url_for('main.create_candidature_submit') }}" enctype="multipart/form-data">
+<div class="row g-3">
+  <!-- Main form -->
+  <div class="col-md-8">
+    <div class="card mb-3 animate-in">
+      <div class="card-header"><h5>Informations</h5></div>
+      <div class="card-body">
+        <div class="mb-3">
+          <label for="entreprise" class="form-label">Entreprise *</label>
+          <input type="text" name="entreprise" id="entreprise" class="form-control" required
+                 placeholder="Nom de l'entreprise"
+                 value="{{ prefill_cible.nom if prefill_cible else '' }}">
+        </div>
+        <div class="mb-3">
+          <label for="poste" class="form-label">Poste</label>
+          <input type="text" name="poste" id="poste" class="form-control"
+                 placeholder="Intitule du poste">
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="type" class="form-label">Type *</label>
+            <select name="type" id="type" class="form-select" required>
+              {% for t in types %}
+              <option value="{{ t }}">{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="priorite" class="form-label">Priorite *</label>
+            <select name="priorite" id="priorite" class="form-select" required>
+              {% for p in priorites %}
+              <option value="{{ p }}">{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="cible_id" class="form-label">Cible *</label>
+          {% if prefill_cible %}
+          <div class="form-control" style="background:var(--bg-secondary);cursor:default">{{ prefill_cible.nom }}</div>
+          <input type="hidden" name="cible_id" id="cible_id" value="{{ prefill_cible.id }}">
+          {% else %}
+          <select name="cible_id" id="cible_id" class="form-select" required>
+            <option value="">-- Choisir une cible --</option>
+            {% for cat, items in cibles|groupby('categorie') %}
+            <optgroup label="{{ cat }}">
+              {% for ci in items %}
+              <option value="{{ ci.id }}" data-nom="{{ ci.nom }}">{{ ci.nom }}</option>
+              {% endfor %}
+            </optgroup>
+            {% endfor %}
+          </select>
+          {% endif %}
+        </div>
+        <div class="mb-3">
+          <label for="localisation" class="form-label">Localisation</label>
+          <input type="text" name="localisation" id="localisation" class="form-control"
+                 placeholder="Ville, region ou teletravail">
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3 animate-in">
+      <div class="card-header"><h5>Contenu</h5></div>
+      <div class="card-body">
+        <textarea name="contenu" id="contenu" class="form-control" rows="8"
+                  placeholder="Notes, description du poste, informations complementaires... (Markdown supporte)"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Side panel -->
+  <div class="col-md-4">
+    <div class="card mb-3 animate-in">
+      <div class="card-header"><h5>Fichiers</h5></div>
+      <div class="card-body">
+        <input type="file" name="fichiers" id="fichiers" class="form-control form-control-sm" multiple>
+        <div class="form-hint">PDF, Word, Markdown, images — 10 Mo max par fichier</div>
+      </div>
+    </div>
+
+    <div class="card mb-3 animate-in">
+      <div class="card-header"><h5>Actions</h5></div>
+      <div class="card-body">
+        <button type="submit" class="btn btn-primary w-100 mb-2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Creer
+        </button>
+        <a href="{{ url_for('main.dashboard') }}" class="btn btn-secondary w-100">Annuler</a>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+{% endblock %}

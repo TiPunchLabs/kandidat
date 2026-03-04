@@ -1,0 +1,24 @@
+<div id="timeline-container">
+  {% if historique %}
+  <ol class="timeline">
+    {% for h in historique %}
+    <li class="timeline-item" data-historique-id="{{ h.id }}" data-commentaire="{{ h.commentaire or '' }}" data-commentaire-html="{{ h.commentaire_html or '' }}" data-ancien-statut="{{ h.ancien_statut or '' }}" data-nouveau-statut="{{ h.nouveau_statut }}" data-date="{{ h.date_changement }}">
+      <span class="timeline-dot timeline-dot--{{ h.nouveau_statut }}" role="button" tabindex="0" title="Voir/editer le commentaire"></span>
+      <div class="timeline-content">
+        <div class="timeline-badges">
+          {% if h.ancien_statut %}
+          <span class="badge badge-{{ h.ancien_statut }}">{{ h.ancien_statut }}</span>
+          <span class="timeline-arrow">&rarr;</span>
+          {% endif %}
+          <span class="badge badge-{{ h.nouveau_statut }}">{{ h.nouveau_statut }}</span>
+        </div>
+        <time class="timeline-date">{{ h.date_changement }}</time>
+        {% if h.commentaire %}<span class="timeline-comment-indicator"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>{% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <p style="color:var(--text-tertiary);font-size:0.82rem;margin:0">Aucun historique.</p>
+  {% endif %}
+</div>

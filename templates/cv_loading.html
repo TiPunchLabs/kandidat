@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Adaptation en cours - kandidat{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('main.detail', slug=slug) }}">{{ entreprise }}</a></li>
+    <li class="breadcrumb-item active">Adaptation CV</li>
+  </ol>
+</nav>
+
+<div class="cv-loading-container">
+  <div class="cv-loading-spinner">
+    <div class="spinner-ring"></div>
+  </div>
+  <h2>Adaptation en cours...</h2>
+  <p class="text-muted">Le LLM adapte votre CV au poste de <strong>{{ poste }}</strong> chez <strong>{{ entreprise }}</strong>.</p>
+  <p class="text-muted" id="loading-hint">Cela peut prendre jusqu'a 2 minutes selon le modele utilise.</p>
+  <div id="loading-error" class="alert alert-danger mt-3" style="display:none"></div>
+  <a href="{{ url_for('main.detail', slug=slug) }}" class="btn btn-outline-secondary btn-sm mt-3" id="cancel-btn">Annuler</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var slug = '{{ slug }}';
+
+  fetch('/api/candidatures/' + slug + '/cv/adapt', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cv_source: '{{ cv_source }}' })
+  })
+  .then(function(r) {
+    return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; });
+  })
+  .then(function(result) {
+    if (result.ok) {
+      // Store adapted HTML in sessionStorage and redirect to preview
+      sessionStorage.setItem('cv_adapted_html_' + slug, result.data.data.adapted_html);
+      sessionStorage.setItem('cv_provider_' + slug, result.data.data.provider_used);
+      if (result.data.data.warning) {
+        sessionStorage.setItem('cv_warning_' + slug, result.data.data.warning);
+      }
+      window.location.href = '/candidature/' + slug + '/cv/preview';
+    } else {
+      showError(result.data.error || 'Erreur inconnue');
+    }
+  })
+  .catch(function(err) {
+    showError('Erreur de connexion: ' + err.message);
+  });
+
+  function showError(msg) {
+    document.querySelector('.cv-loading-spinner').style.display = 'none';
+    document.querySelector('h2').textContent = 'Erreur';
+    document.getElementById('loading-hint').style.display = 'none';
+    var errorDiv = document.getElementById('loading-error');
+    errorDiv.textContent = msg;
+    errorDiv.style.display = 'block';
+  }
+})();
+</script>
+{% endblock %}

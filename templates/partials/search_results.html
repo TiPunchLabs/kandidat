@@ -1,0 +1,20 @@
+<div id="search-results">
+{% if query %}
+  {% if results %}
+  <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:0.75rem">
+    <span style="font-family:var(--font-mono);font-weight:500">{{ results|length }}</span> resultat{{ 's' if results|length > 1 else '' }} pour <strong style="color:var(--text)">{{ query }}</strong>
+  </p>
+  {% for r in results %}
+  <a href="{{ url_for('main.detail', slug=r.slug) }}" class="search-result-item">
+    <h6 class="mb-1">{{ r.slug }} / {{ r.filename }}</h6>
+    <p class="mb-0" style="font-size:0.8rem;color:var(--text-secondary)">
+      <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--text-tertiary)">L{{ r.line }}</span>
+      {{ r.context[:r.context.lower().find(r.match.lower())] }}<mark>{{ r.context[r.context.lower().find(r.match.lower()):r.context.lower().find(r.match.lower()) + r.match|length] }}</mark>{{ r.context[r.context.lower().find(r.match.lower()) + r.match|length:] }}
+    </p>
+  </a>
+  {% endfor %}
+  {% else %}
+  <div class="alert alert-info">Aucun resultat pour <strong>{{ query }}</strong>.</div>
+  {% endif %}
+{% endif %}
+</div>

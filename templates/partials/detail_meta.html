@@ -1,0 +1,14 @@
+<div id="detail-meta-container">
+  <table class="detail-meta-table">
+    <tr><th>Poste</th><td>{{ c.poste or '-' }}</td></tr>
+    <tr><th>Type</th><td>{{ c.type }}</td></tr>
+    <tr><th>Categorie</th><td><span class="badge badge-cat-{{ c.categorie_entreprise|default('entreprise') }}">{{ c.categorie_entreprise|default('entreprise') }}</span></td></tr>
+    <tr><th>Cible</th><td>{% if c.cible %}<a href="{{ url_for('main.cible_detail', cible_id=c.cible.id) }}">{{ c.cible.nom }}</a> <span class="badge badge-cat-{{ c.cible.categorie }}">{{ c.cible.categorie }}</span>{% else %}-{% endif %}</td></tr>
+    <tr><th>Statut</th><td><span class="badge badge-{{ c.statut }}">{{ c.statut }}</span></td></tr>
+    <tr><th>Date candidature</th><td style="font-family:var(--font-mono);font-size:0.82rem">{{ c.date_candidature or '-' }}</td></tr>
+    <tr><th>Date relance</th><td style="font-family:var(--font-mono);font-size:0.82rem">{{ c.date_relance or '-' }}</td></tr>
+    <tr><th>Localisation</th><td>{{ c.localisation or '-' }}</td></tr>
+    <tr><th>Priorite</th><td><span class="priorite-{{ c.priorite }}">{{ c.priorite }}</span></td></tr>
+    <tr><th>Tags</th><td>{{ c.tags | join(', ') if c.tags else '-' }}</td></tr>
+  </table>
+</div>

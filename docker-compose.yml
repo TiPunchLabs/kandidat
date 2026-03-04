@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    profiles: ["prod", "dev"]
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=kandidat
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-kandidat}
+      - POSTGRES_DB=kandidat
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kandidat"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  kandidat:
+    build: .
+    profiles: ["prod"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${KANDIDAT_DATA_PATH:-./data/prod}:/app/data
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-kandidat-change-me}
+      - KANDIDAT_ENV=prod
+      - FT_DATA_DIR=/app/data
+      - DATABASE_URL=postgresql+psycopg://kandidat:${POSTGRES_PASSWORD:-kandidat}@postgres:5432/kandidat
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  kandidat-dev:
+    build: .
+    profiles: ["dev"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/dev:/app/data
+      - .:/app/src
+    environment:
+      - SECRET_KEY=kandidat-dev-key
+      - KANDIDAT_ENV=dev
+      - FT_DATA_DIR=/app/data
+      - DATABASE_URL=postgresql+psycopg://kandidat:${POSTGRES_PASSWORD:-kandidat}@postgres:5432/kandidat
+      - FLASK_DEBUG=1
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["flask", "run", "--host", "0.0.0.0", "--port", "8000", "--debug"]
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["ollama"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  ollama-models:
+  pgdata:

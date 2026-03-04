@@ -1,0 +1,20 @@
+* text=auto
+
+*.py text diff=python
+*.md text diff=markdown
+*.html text diff=html
+*.css text diff=css
+*.js text diff=javascript
+*.json text
+*.yaml text
+*.yml text
+*.toml text
+*.sh text eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.db binary
+
+uv.lock linguist-generated=true

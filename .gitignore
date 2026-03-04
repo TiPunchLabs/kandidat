@@ -1,0 +1,35 @@
+# Database
+kandidat.db
+kandidat.db-shm
+kandidat.db-wal
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Secrets & credentials
+.env
+.envrc.local
+*.pem
+credentials*
+
+# Tools
+.pytest_cache/
+.ruff_cache/
+.coverage
+.claude/
+.specify/
+.playwright-mcp/
+
+# Terraform
+gitlab-terraform/.terraform/
+gitlab-terraform/terraform.tfstate
+gitlab-terraform/terraform.tfstate.backup
+gitlab-terraform/*.tfvars
+
+# Claude Code
+CLAUDE.md
+
+# Data directories
+data/

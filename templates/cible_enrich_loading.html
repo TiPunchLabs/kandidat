@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Enrichissement en cours - kandidat{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.cibles') }}">Cibles</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('main.cible_detail', cible_id=cible.id) }}">{{ cible.nom }}</a></li>
+    <li class="breadcrumb-item active">Enrichissement</li>
+  </ol>
+</nav>
+
+<div class="cv-loading-container">
+  <div class="cv-loading-spinner">
+    <div class="spinner-ring"></div>
+  </div>
+  <h2>Enrichissement en cours...</h2>
+  <p class="text-muted">Recherche d'informations sur <strong>{{ cible.nom }}</strong> via le web et extraction par IA.</p>
+  <p class="text-muted" id="loading-hint">Cela peut prendre jusqu'a 1 minute.</p>
+  <div id="loading-error" class="alert alert-danger mt-3" style="display:none"></div>
+  <a href="{{ url_for('main.cible_detail', cible_id=cible.id) }}" class="btn btn-outline-secondary btn-sm mt-3">Annuler</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var cibleId = {{ cible.id }};
+
+  fetch('/api/cibles/' + cibleId + '/enrich', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(function(r) {
+    return r.json().then(function(data) { return { ok: r.ok, status: r.status, data: data }; });
+  })
+  .then(function(result) {
+    if (result.ok) {
+      sessionStorage.setItem('enrich_result_' + cibleId, JSON.stringify(result.data.data));
+      window.location.href = '/cible/' + cibleId + '/enrich/preview';
+    } else {
+      showError(result.data.error || 'Erreur inconnue');
+    }
+  })
+  .catch(function(err) {
+    showError('Erreur de connexion: ' + err.message);
+  });
+
+  function showError(msg) {
+    document.querySelector('.cv-loading-spinner').style.display = 'none';
+    document.querySelector('h2').textContent = 'Erreur';
+    document.getElementById('loading-hint').style.display = 'none';
+    var errorDiv = document.getElementById('loading-error');
+    errorDiv.textContent = msg;
+    errorDiv.style.display = 'block';
+  }
+})();
+</script>
+{% endblock %}

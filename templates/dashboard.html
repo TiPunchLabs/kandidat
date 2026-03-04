@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - kandidat{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <form method="post" action="{{ url_for('main.dashboard_regenerate') }}"
+        hx-post="{{ url_for('main.dashboard_regenerate') }}"
+        hx-target="#flash-messages"
+        hx-swap="innerHTML"
+        hx-disabled-elt="find button[type='submit']">
+    <button type="submit" class="btn btn-outline-secondary btn-sm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+      </svg>
+      Regenerer
+    </button>
+  </form>
+</div>
+
+<!-- KPI Strip -->
+<div class="kpi-strip">
+  <div class="kpi-card kpi-card--total animate-in">
+    <div class="kpi-value" id="kpi-total">{{ candidatures|rejectattr('statut','equalto','archivee')|list|length }}</div>
+    <div class="kpi-label">Total</div>
+  </div>
+  <div class="kpi-card kpi-card--envoyee animate-in">
+    <div class="kpi-value" id="kpi-envoyee">{{ candidatures|selectattr('statut','equalto','envoyee')|list|length }}</div>
+    <div class="kpi-label">Envoyees</div>
+  </div>
+  <div class="kpi-card kpi-card--entretien animate-in">
+    <div class="kpi-value" id="kpi-entretien">{{ candidatures|selectattr('statut','equalto','entretien')|list|length }}</div>
+    <div class="kpi-label">Entretiens</div>
+  </div>
+  <div class="kpi-card kpi-card--relancee animate-in">
+    <div class="kpi-value" id="kpi-relancee">{{ candidatures|selectattr('statut','equalto','relancee')|list|length }}</div>
+    <div class="kpi-label">Relancees</div>
+  </div>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-tertiary);flex-shrink:0">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+  </svg>
+  <select id="filter-statut" class="form-select form-select-sm">
+    <option value="">Tous les statuts</option>
+    {% for s in statuts %}
+    <option value="{{ s }}">{{ s }}</option>
+    {% endfor %}
+  </select>
+  <select id="filter-type" class="form-select form-select-sm">
+    <option value="">Tous les types</option>
+    {% for t in types %}
+    <option value="{{ t }}">{{ t }}</option>
+    {% endfor %}
+  </select>
+  <select id="filter-priorite" class="form-select form-select-sm">
+    <option value="">Toutes priorites</option>
+    {% for p in priorites %}
+    <option value="{{ p }}">{{ p }}</option>
+    {% endfor %}
+  </select>
+  <select id="filter-categorie" class="form-select form-select-sm">
+    <option value="">Toutes categories</option>
+    {% for cat in categories %}
+    <option value="{{ cat }}">{{ cat }}</option>
+    {% endfor %}
+  </select>
+  <span class="count-display" id="count-display" role="status" aria-live="polite"></span>
+</div>
+
+<!-- Table -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table-modern" id="candidatures-table">
+      <thead>
+        <tr>
+          <th data-col="entreprise" aria-sort="none">Entreprise <span class="sort-arrow" aria-hidden="true"></span></th>
+          <th data-col="poste" aria-sort="none">Poste <span class="sort-arrow" aria-hidden="true"></span></th>
+          <th data-col="type" aria-sort="none">Type <span class="sort-arrow" aria-hidden="true"></span></th>
+          <th data-col="categorie" aria-sort="none">Categorie <span class="sort-arrow" aria-hidden="true"></span></th>
+          <th data-col="statut" aria-sort="none">Statut <span class="sort-arrow" aria-hidden="true"></span></th>
+          <th data-col="date_candidature" aria-sort="none">Date <span class="sort-arrow" aria-hidden="true"></span></th>
+          <th data-col="localisation" aria-sort="none">Lieu <span class="sort-arrow" aria-hidden="true"></span></th>
+          <th data-col="priorite" aria-sort="none">Priorite <span class="sort-arrow" aria-hidden="true"></span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in candidatures %}
+        <tr data-statut="{{ c.statut }}" data-type="{{ c.type }}" data-priorite="{{ c.priorite }}" data-categorie="{{ c.categorie_entreprise|default('entreprise') }}">
+          <td data-label="Entreprise"><a href="{{ url_for('main.detail', slug=c.slug) }}">{{ c.entreprise }}</a></td>
+          <td data-label="Poste">{{ c.poste or '-' }}</td>
+          <td data-label="Type" style="font-family:var(--font-mono);font-size:0.78rem">{{ c.type }}</td>
+          <td data-label="Categorie" data-col-hide><span class="badge badge-cat-{{ c.categorie_entreprise|default('entreprise') }}">{{ c.categorie_entreprise|default('entreprise') }}</span></td>
+          <td data-label="Statut"><span class="badge badge-{{ c.statut }}">{{ c.statut }}</span></td>
+          <td data-label="Date" data-col-hide data-sort="{{ c.date_candidature or '9999' }}" style="font-family:var(--font-mono);font-size:0.8rem">{{ c.date_candidature or '-' }}</td>
+          <td data-label="Lieu" data-col-hide>{{ c.localisation or '-' }}</td>
+          <td data-label="Priorite"><span class="priorite-{{ c.priorite }}">{{ c.priorite }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-empty" id="table-empty" style="display:none">
+    <p style="text-align:center;color:var(--text-tertiary);padding:2rem 1rem;margin:0;font-size:0.85rem">
+      Aucune candidature ne correspond aux filtres.
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var table = document.getElementById('candidatures-table');
+  var tbody = table.querySelector('tbody');
+  var headers = table.querySelectorAll('th[data-col]');
+  var filterStatut = document.getElementById('filter-statut');
+  var filterType = document.getElementById('filter-type');
+  var filterPriorite = document.getElementById('filter-priorite');
+  var filterCategorie = document.getElementById('filter-categorie');
+  var countDisplay = document.getElementById('count-display');
+  var tableEmpty = document.getElementById('table-empty');
+
+  var sortCol = null;
+  var sortAsc = true;
+
+  function updateCount() {
+    var visible = tbody.querySelectorAll('tr:not([style*="display: none"])').length;
+    var total = tbody.querySelectorAll('tr').length;
+    countDisplay.textContent = visible + ' / ' + total;
+    tableEmpty.style.display = (visible === 0 && total > 0) ? '' : 'none';
+  }
+
+  headers.forEach(function(th) {
+    th.addEventListener('click', function() {
+      var col = th.getAttribute('data-col');
+      if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+
+      headers.forEach(function(h) {
+        h.querySelector('.sort-arrow').textContent = '';
+        h.setAttribute('aria-sort', 'none');
+      });
+      th.querySelector('.sort-arrow').textContent = sortAsc ? ' \u25B2' : ' \u25BC';
+      th.setAttribute('aria-sort', sortAsc ? 'ascending' : 'descending');
+
+      var rows = Array.from(tbody.querySelectorAll('tr'));
+      var colIndex = Array.from(th.parentNode.children).indexOf(th);
+
+      rows.sort(function(a, b) {
+        var aVal = a.children[colIndex].getAttribute('data-sort') || a.children[colIndex].textContent.trim().toLowerCase();
+        var bVal = b.children[colIndex].getAttribute('data-sort') || b.children[colIndex].textContent.trim().toLowerCase();
+        if (aVal < bVal) return sortAsc ? -1 : 1;
+        if (aVal > bVal) return sortAsc ? 1 : -1;
+        return 0;
+      });
+
+      rows.forEach(function(row) { tbody.appendChild(row); });
+    });
+  });
+
+  function applyFilters() {
+    var sVal = filterStatut.value;
+    var tVal = filterType.value;
+    var pVal = filterPriorite.value;
+    var cVal = filterCategorie.value;
+
+    tbody.querySelectorAll('tr').forEach(function(row) {
+      var statut = row.getAttribute('data-statut');
+      // Hide archived unless explicitly filtering for them
+      var hideArchived = !sVal && statut === 'archivee';
+      var matchS = !sVal || statut === sVal;
+      var matchT = !tVal || row.getAttribute('data-type') === tVal;
+      var matchP = !pVal || row.getAttribute('data-priorite') === pVal;
+      var matchC = !cVal || row.getAttribute('data-categorie') === cVal;
+      row.style.display = (!hideArchived && matchS && matchT && matchP && matchC) ? '' : 'none';
+    });
+    updateCount();
+  }
+
+  filterStatut.addEventListener('change', applyFilters);
+  filterType.addEventListener('change', applyFilters);
+  filterPriorite.addEventListener('change', applyFilters);
+  filterCategorie.addEventListener('change', applyFilters);
+
+  updateCount();
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+stages:
+  - lint
+  - test
+  - security
+
+default:
+  image: python:3.12
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cache/pip
+      - .cache/uv
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  UV_CACHE_DIR: "$CI_PROJECT_DIR/.cache/uv"
+
+.uv-setup: &uv-setup
+  before_script:
+    - pip install uv
+    - uv sync --frozen
+
+lint:
+  stage: lint
+  <<: *uv-setup
+  script:
+    - uv run ruff check .
+    - uv run ruff format --check .
+
+test:
+  stage: test
+  <<: *uv-setup
+  before_script:
+    - apt-get update && apt-get install -y libpango-1.0-0 libharfbuzz0b libcairo2
+    - pip install uv
+    - uv sync --frozen
+  script:
+    - uv run python -m pytest --cov --tb=short -q
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+    when: always
+
+security:
+  stage: security
+  <<: *uv-setup
+  script:
+    - uv run bandit -c pyproject.toml -r services/ api/ routes.py app.py config.py

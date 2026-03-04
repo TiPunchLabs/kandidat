@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}{{ filename }} - {{ c.entreprise }} - kandidat{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('main.detail', slug=slug) }}">{{ c.entreprise }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ filename }}</li>
+  </ol>
+</nav>
+
+<div class="card animate-in">
+  <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+    <h5 style="margin:0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      </svg>
+      <span style="font-family:var(--font-mono);font-weight:500">{{ filename }}</span>
+    </h5>
+    <div class="file-actions" style="opacity:1">
+      <a href="{{ url_for('main.fichier_download', slug=slug, filename=filename) }}" class="btn btn-secondary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        Telecharger
+      </a>
+      <form method="post" action="{{ url_for('main.fichier_delete', slug=slug, filename=filename) }}" style="margin:0;display:inline" class="file-delete-form" data-nom="{{ filename }}">
+        <button type="submit" class="btn btn-sm btn-delete-file" style="padding:7px 12px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+          </svg>
+          Supprimer
+        </button>
+      </form>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if html_content %}
+    <div class="markdown-body">
+      {{ html_content | safe }}
+    </div>
+    {% else %}
+    <p style="color:var(--text-tertiary);font-size:0.85rem">Ce type de fichier ne peut pas etre affiche. Utilisez le bouton "Telecharger" ci-dessus.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.file-delete-form').forEach(function(form) {
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var self = this;
+    var nom = this.dataset.nom;
+    confirmModal('Supprimer "' + nom + '" ?', 'Le fichier sera definitivement supprime du disque.').then(function(ok) {
+      if (ok) self.submit();
+    });
+  });
+});
+</script>
+{% endblock %}

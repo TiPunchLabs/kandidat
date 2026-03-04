@@ -1,0 +1,580 @@
+{% extends "base.html" %}
+
+{% block title %}{{ c.entreprise }} - kandidat{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ c.entreprise }}</li>
+  </ol>
+</nav>
+
+<div class="row g-3">
+  <!-- Main info -->
+  <div class="col-md-8">
+    <div class="card mb-3 animate-in">
+      <div class="card-header">
+        <div class="detail-header">
+          <h2>{{ c.entreprise }}</h2>
+          <span id="header-badge" class="badge badge-{{ c.statut }}">{{ c.statut }}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        {% include "partials/detail_meta.html" %}
+      </div>
+    </div>
+
+    <div class="card mb-3 animate-in">
+      <div class="card-header"><h5>Historique des statuts</h5></div>
+      <div class="card-body">
+        {% include "partials/timeline.html" %}
+      </div>
+    </div>
+
+    <div class="card mb-3 animate-in" id="contenu-card">
+      <div class="card-header contenu-card-header">
+        <h5>Contenu</h5>
+        <button type="button" class="btn-icon" id="contenu-edit-btn" title="Editer le contenu" aria-label="Editer le contenu">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="card-body markdown-body" id="contenu-card-body">
+        {% if html_content %}
+        {{ html_content | safe }}
+        {% else %}
+        <p class="text-muted">Aucun contenu.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card mb-3 animate-in" id="commentaire-card" style="display:none">
+      <div class="card-header contenu-card-header">
+        <h5>Commentaire</h5>
+        <button type="button" class="btn-icon" id="commentaire-close-btn" title="Fermer" aria-label="Fermer le commentaire">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="card-body" id="commentaire-card-body"></div>
+    </div>
+  </div>
+
+  <!-- Side panel -->
+  <div class="col-md-4">
+    <!-- Edit form -->
+    <div class="card mb-3 animate-in">
+      <div class="card-header">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Modifier
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('main.update', slug=c.slug) }}" id="edit-form" data-current-statut="{{ c.statut }}"
+              hx-post="{{ url_for('main.update', slug=c.slug) }}"
+              hx-target="#detail-meta-container"
+              hx-swap="outerHTML"
+              hx-disabled-elt="find button[type='submit']">
+          <div class="mb-3">
+            <label for="statut" class="form-label">Statut</label>
+            <select name="statut" id="statut" class="form-select form-select-sm">
+              {% for s in statuts %}
+              <option value="{{ s }}" {{ 'selected' if s == c.statut }}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="priorite" class="form-label">Priorite</label>
+            <select name="priorite" id="priorite" class="form-select form-select-sm">
+              {% for p in priorites %}
+              <option value="{{ p }}" {{ 'selected' if p == c.priorite }}>{{ p }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="categorie_entreprise" class="form-label">Categorie</label>
+            <select name="categorie_entreprise" id="categorie_entreprise" class="form-select form-select-sm">
+              {% for cat in categories %}
+              <option value="{{ cat }}" {{ 'selected' if cat == c.categorie_entreprise|default('entreprise') }}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="date_candidature" class="form-label">Date candidature</label>
+            <input type="date" name="date_candidature" id="date_candidature"
+                   class="form-control form-control-sm" value="{{ c.date_candidature }}">
+          </div>
+          <div class="mb-3">
+            <label for="date_relance" class="form-label">Date relance</label>
+            <input type="date" name="date_relance" id="date_relance"
+                   class="form-control form-control-sm" value="{{ c.date_relance }}">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100">
+            Enregistrer
+          </button>
+        </form>
+        <div class="detail-danger-zone">
+          {% if c.statut != 'archivee' %}
+          <form method="post" action="{{ url_for('main.candidature_archive', slug=c.slug) }}" class="candidature-archive-form"
+                data-entreprise="{{ c.entreprise }}">
+            <button type="submit" class="btn btn-secondary btn-sm w-100">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/>
+              </svg>
+              Archiver
+            </button>
+          </form>
+          {% endif %}
+          <form method="post" action="{{ url_for('main.candidature_delete', slug=c.slug) }}" class="candidature-delete-form"
+                data-entreprise="{{ c.entreprise }}" data-fichiers="{{ c.fichiers|length }}">
+            <button type="submit" class="btn btn-sm confirm-btn-danger w-100">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              Supprimer
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Associated files -->
+    <div class="card mb-3 animate-in">
+      <div class="card-header">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+            <polyline points="13 2 13 9 20 9"/>
+          </svg>
+          Fichiers
+        </h5>
+      </div>
+      <div class="card-body" style="padding:0.65rem 1rem">
+        {% include "partials/file_list.html" %}
+      </div>
+    </div>
+
+    <!-- CV Adaptation -->
+    {% if cv_reference_configured %}
+    <div class="card mb-3 animate-in">
+      <div class="card-header">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          CV
+        </h5>
+      </div>
+      <div class="card-body">
+        <a href="{{ url_for('main.cv_loading', slug=c.slug) }}" class="btn btn-primary btn-sm w-100 mb-2">
+          Adapter mon CV
+        </a>
+        <a href="#" class="btn btn-outline-secondary btn-sm w-100" onclick="event.preventDefault(); convertCV('{{ c.slug }}')">
+          Exporter en PDF/DOCX
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<dialog id="comment-modal" class="comment-modal">
+  <h5 class="comment-modal-title">Commentaire sur le changement de statut</h5>
+  <div id="modal-transition" class="comment-modal-transition"></div>
+  <textarea id="modal-commentaire" maxlength="1000" rows="6" placeholder="Ajouter un commentaire (optionnel)..." class="form-control"></textarea>
+  <div class="comment-modal-footer">
+    <span id="modal-char-count" class="char-count">0 / 1000</span>
+    <div class="modal-actions">
+      <button type="button" id="modal-cancel" class="btn btn-secondary btn-sm">Annuler</button>
+      <button type="button" id="modal-confirm" class="btn btn-primary btn-sm">Confirmer</button>
+    </div>
+  </div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Delegated submit handler for confirmations (file-delete, candidature-delete, archive)
+document.addEventListener('submit', function(e) {
+  // File delete
+  var fileForm = e.target.closest('.file-delete-form');
+  if (fileForm) {
+    e.preventDefault();
+    var nom = fileForm.dataset.nom;
+    confirmModal('Supprimer "' + nom + '" ?', 'Le fichier sera definitivement supprime du disque.').then(function(ok) {
+      if (ok) {
+        if (typeof htmx !== 'undefined') htmx.trigger(fileForm, 'submit');
+        else fileForm.submit();
+      }
+    });
+    return;
+  }
+  // Candidature delete
+  var deleteForm = e.target.closest('.candidature-delete-form');
+  if (deleteForm) {
+    e.preventDefault();
+    var name = deleteForm.dataset.entreprise;
+    var count = parseInt(deleteForm.dataset.fichiers, 10) || 0;
+    var msg = 'La candidature et son dossier seront definitivement supprimes.';
+    if (count > 0) {
+      msg = '<strong>' + count + ' fichier' + (count > 1 ? 's' : '') + '</strong> ' + (count > 1 ? 'seront' : 'sera')
+          + ' definitivement supprime' + (count > 1 ? 's' : '') + ' du disque.';
+    }
+    confirmModal('Supprimer "' + name + '" ?', msg).then(function(ok) {
+      if (ok) deleteForm.submit();
+    });
+    return;
+  }
+  // Candidature archive
+  var archiveForm = e.target.closest('.candidature-archive-form');
+  if (archiveForm) {
+    e.preventDefault();
+    var archiveName = archiveForm.dataset.entreprise;
+    confirmModal(
+      'Archiver "' + archiveName + '" ?',
+      'La candidature sera masquee du dashboard. Les fichiers sont conserves.',
+      {okLabel: 'Archiver', variant: 'warning'}
+    ).then(function(ok) {
+      if (ok) archiveForm.submit();
+    });
+    return;
+  }
+});
+
+/* --- Comment modal on status change (US1) --- */
+(function() {
+  var form = document.getElementById('edit-form');
+  if (!form) return;
+  var currentStatut = form.dataset.currentStatut;
+  var statutSelect = form.querySelector('select[name="statut"]');
+  if (!statutSelect) return;
+  var dialog = document.getElementById('comment-modal');
+  var textarea = document.getElementById('modal-commentaire');
+  var charCount = document.getElementById('modal-char-count');
+  var confirmBtn = document.getElementById('modal-confirm');
+  var cancelBtn = document.getElementById('modal-cancel');
+  var transitionDiv = document.getElementById('modal-transition');
+
+  textarea.addEventListener('input', function() {
+    charCount.textContent = textarea.value.length + ' / 1000';
+  });
+
+  form.addEventListener('submit', function(e) {
+    var newStatut = statutSelect.value;
+    if (newStatut !== currentStatut) {
+      e.preventDefault();
+      // Populate transition badges
+      transitionDiv.innerHTML = '<span class="badge badge-' + currentStatut + '">' + currentStatut + '</span>'
+        + ' <span class="timeline-arrow">&rarr;</span> '
+        + '<span class="badge badge-' + newStatut + '">' + newStatut + '</span>';
+      textarea.value = '';
+      charCount.textContent = '0 / 1000';
+      dialog.showModal();
+    }
+  });
+
+  confirmBtn.addEventListener('click', function() {
+    // Inject commentaire as hidden input
+    var existing = form.querySelector('input[name="commentaire"]');
+    if (existing) existing.remove();
+    var hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'commentaire';
+    hidden.value = textarea.value;
+    form.appendChild(hidden);
+    dialog.close();
+    // Use HTMX if available, fallback to form.submit()
+    if (typeof htmx !== 'undefined') {
+      htmx.trigger(form, 'submit');
+    } else {
+      form.submit();
+    }
+  });
+
+  cancelBtn.addEventListener('click', function() {
+    dialog.close();
+    statutSelect.value = currentStatut;
+  });
+
+  // Also handle Escape / backdrop click
+  dialog.addEventListener('close', function() {
+    statutSelect.value = currentStatut;
+  });
+})();
+
+/* --- Contenu edit (US2a) --- */
+(function() {
+  var slug = '{{ c.slug }}';
+  var contenuBody = document.getElementById('contenu-card-body');
+  var editBtn = document.getElementById('contenu-edit-btn');
+  if (!contenuBody || !editBtn) return;
+
+  var originalContenuHTML = contenuBody.innerHTML;
+  var rawContenu = {{ c.contenu | tojson }};
+
+  function restoreContenu() {
+    contenuBody.innerHTML = originalContenuHTML;
+    editBtn.style.display = '';
+  }
+
+  editBtn.addEventListener('click', function() {
+    editBtn.style.display = 'none';
+    contenuBody.innerHTML = '<div class="contenu-edit">'
+      + '<textarea id="contenu-edit-textarea" rows="10" class="form-control" placeholder="Contenu markdown...">' + rawContenu.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>'
+      + '<div class="contenu-edit-footer">'
+      + '<span></span>'
+      + '<div class="btn-group">'
+      + '<button type="button" class="btn btn-secondary btn-sm" id="contenu-cancel">Annuler</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" id="contenu-save">Sauvegarder</button>'
+      + '</div></div></div>';
+
+    document.getElementById('contenu-cancel').addEventListener('click', restoreContenu);
+
+    document.getElementById('contenu-save').addEventListener('click', function() {
+      var saveBtn = this;
+      var textarea = document.getElementById('contenu-edit-textarea');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Sauvegarde...';
+      fetch('/api/candidatures/' + slug, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({contenu: textarea.value})
+      })
+      .then(function(resp) {
+        if (!resp.ok) return resp.json().then(function(d) { throw new Error(d.error || 'Erreur'); });
+        return resp.json();
+      })
+      .then(function() {
+        window.location.reload();
+      })
+      .catch(function(err) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Sauvegarder';
+        var errDiv = contenuBody.querySelector('.contenu-edit-error');
+        if (!errDiv) {
+          errDiv = document.createElement('div');
+          errDiv.className = 'contenu-edit-error alert alert-danger';
+          contenuBody.querySelector('.contenu-edit').appendChild(errDiv);
+        }
+        errDiv.textContent = err.message;
+      });
+    });
+  });
+})();
+
+/* --- Commentaire card via timeline dot click (US2b) --- */
+(function() {
+  var slug = '{{ c.slug }}';
+  var commentCard = document.getElementById('commentaire-card');
+  var commentBody = document.getElementById('commentaire-card-body');
+  var closeBtn = document.getElementById('commentaire-close-btn');
+  var dots = document.querySelectorAll('.timeline-dot');
+  if (!commentCard || !commentBody) return;
+
+  var activeDot = null;
+
+  function buildTransitionHeader(ancien, nouveau, date) {
+    var header = '<div class="contenu-edit-header">';
+    if (ancien) {
+      header += '<span class="badge badge-' + ancien + '">' + ancien + '</span>'
+        + ' <span class="timeline-arrow">&rarr;</span> ';
+    }
+    header += '<span class="badge badge-' + nouveau + '">' + nouveau + '</span>';
+    header += '<time class="timeline-date" style="margin-left:8px">' + date + '</time>';
+    header += '</div>';
+    return header;
+  }
+
+  function updateCommentIndicator(li, hasComment) {
+    var indicator = li.querySelector('.timeline-comment-indicator');
+    if (hasComment) {
+      if (!indicator) {
+        var timeEl = li.querySelector('.timeline-date');
+        if (timeEl) {
+          var span = document.createElement('span');
+          span.className = 'timeline-comment-indicator';
+          span.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>';
+          timeEl.parentNode.insertBefore(span, timeEl.nextSibling);
+        }
+      }
+    } else {
+      if (indicator) indicator.remove();
+    }
+  }
+
+  function closeCommentCard() {
+    commentCard.style.display = 'none';
+    commentBody.innerHTML = '';
+    if (activeDot) {
+      activeDot.classList.remove('timeline-dot--active');
+      activeDot = null;
+    }
+  }
+
+  closeBtn.addEventListener('click', closeCommentCard);
+
+  function showCommentRead(li, hId, comment, commentHtml, ancien, nouveau, date) {
+    var header = buildTransitionHeader(ancien, nouveau, date);
+    var body = commentHtml
+      ? '<div class="markdown-body">' + commentHtml + '</div>'
+      : '<p class="text-muted">Aucun commentaire.</p>';
+
+    commentBody.innerHTML = '<div class="contenu-edit">'
+      + header + body
+      + '<div class="contenu-edit-footer">'
+      + '<span></span>'
+      + '<div class="btn-group">'
+      + '<button type="button" class="btn btn-primary btn-sm" id="comment-edit-btn">Editer</button>'
+      + '</div></div></div>';
+
+    document.getElementById('comment-edit-btn').addEventListener('click', function() {
+      showCommentEdit(li, hId, comment, ancien, nouveau, date);
+    });
+  }
+
+  function showCommentEdit(li, hId, comment, ancien, nouveau, date) {
+    var header = buildTransitionHeader(ancien, nouveau, date);
+    commentBody.innerHTML = '<div class="contenu-edit">'
+      + header
+      + '<textarea id="comment-edit-textarea" maxlength="1000" rows="6" class="form-control" placeholder="Ajouter un commentaire...">' + comment.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>'
+      + '<div class="contenu-edit-footer">'
+      + '<span class="char-count" id="comment-char-count">' + comment.length + ' / 1000</span>'
+      + '<div class="btn-group">'
+      + '<button type="button" class="btn btn-secondary btn-sm" id="comment-cancel">Annuler</button>'
+      + '<button type="button" class="btn btn-primary btn-sm" id="comment-save">Sauvegarder</button>'
+      + '</div></div></div>';
+
+    var editTextarea = document.getElementById('comment-edit-textarea');
+    var editCharCount = document.getElementById('comment-char-count');
+    editTextarea.addEventListener('input', function() {
+      editCharCount.textContent = editTextarea.value.length + ' / 1000';
+    });
+
+    document.getElementById('comment-cancel').addEventListener('click', function() {
+      closeCommentCard();
+    });
+
+    document.getElementById('comment-save').addEventListener('click', function() {
+      var saveBtn = this;
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Sauvegarde...';
+      fetch('/api/candidatures/' + slug + '/historique/' + hId, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({commentaire: editTextarea.value})
+      })
+      .then(function(resp) {
+        if (!resp.ok) return resp.json().then(function(d) { throw new Error(d.error || 'Erreur'); });
+        return resp.json();
+      })
+      .then(function(data) {
+        var entry = data.data;
+        li.dataset.commentaire = entry.commentaire || '';
+        li.dataset.commentaireHtml = entry.commentaire_html || '';
+        updateCommentIndicator(li, !!entry.commentaire);
+        closeCommentCard();
+      })
+      .catch(function(err) {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Sauvegarder';
+        var errDiv = commentBody.querySelector('.contenu-edit-error');
+        if (!errDiv) {
+          errDiv = document.createElement('div');
+          errDiv.className = 'contenu-edit-error alert alert-danger';
+          commentBody.querySelector('.contenu-edit').appendChild(errDiv);
+        }
+        errDiv.textContent = err.message;
+      });
+    });
+  }
+
+  dots.forEach(function(dot) {
+    dot.addEventListener('click', function() {
+      var li = dot.closest('.timeline-item');
+      if (!li) return;
+      var hId = li.dataset.historiqueId;
+      var comment = li.dataset.commentaire || '';
+      var commentHtml = li.dataset.commentaireHtml || '';
+      var ancien = li.dataset.ancienStatut;
+      var nouveau = li.dataset.nouveauStatut;
+      var date = li.dataset.date;
+
+      // If clicking the already active dot, close
+      if (activeDot === dot) {
+        closeCommentCard();
+        return;
+      }
+
+      if (activeDot) activeDot.classList.remove('timeline-dot--active');
+      dot.classList.add('timeline-dot--active');
+      activeDot = dot;
+
+      commentCard.style.display = '';
+      showCommentRead(li, hId, comment, commentHtml, ancien, nouveau, date);
+    });
+
+    dot.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        dot.click();
+      }
+    });
+  });
+})();
+
+/* --- Convert CV without LLM (US4) --- */
+function convertCV(slug) {
+  fetch('/api/candidatures/' + slug + '/cv/convert', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cv_source: 'global' })
+  })
+  .then(function(r) {
+    return r.json().then(function(d) { return { ok: r.ok, data: d }; });
+  })
+  .then(function(result) {
+    if (result.ok) {
+      window.location.reload();
+    } else {
+      alert(result.data.error || 'Erreur lors de la conversion');
+    }
+  })
+  .catch(function(err) {
+    alert('Erreur de connexion: ' + err.message);
+  });
+}
+
+/* --- Update currentStatut after HTMX swap (edit form) --- */
+document.addEventListener('htmx:afterSwap', function(evt) {
+  // Update edit form currentStatut from the header badge
+  var badge = document.getElementById('header-badge');
+  var editForm = document.getElementById('edit-form');
+  if (badge && editForm) {
+    var newStatut = badge.textContent.trim();
+    editForm.dataset.currentStatut = newStatut;
+    // Update the JS variable used by the comment modal
+    var statutSelect = editForm.querySelector('select[name="statut"]');
+    if (statutSelect) {
+      // Re-bind the comment modal logic with updated currentStatut
+      window._kandidatCurrentStatut = newStatut;
+    }
+  }
+  // Re-process HTMX on newly swapped content
+  if (typeof htmx !== 'undefined') {
+    htmx.process(evt.detail.target);
+  }
+});
+
+</script>
+{% endblock %}

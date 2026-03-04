@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Entreprises cibles - kandidat{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Entreprises cibles</h1>
+</div>
+
+{% include "partials/cibles_list.html" %}
+
+<!-- Modale ajout/modification de cible -->
+<div class="cible-modal-overlay" id="cible-modal-overlay">
+  <div class="cible-modal" role="dialog" aria-modal="true" aria-labelledby="cible-modal-title">
+    <h4 class="cible-modal-title" id="cible-modal-title"></h4>
+    <form id="cible-modal-form" method="post"
+          hx-target="#cibles-content"
+          hx-swap="outerHTML"
+          hx-disabled-elt="find button[type='submit']">
+      <input type="hidden" name="categorie" id="cm-categorie">
+      <div class="cible-modal-fields">
+        <div class="cible-modal-row">
+          <label for="cm-nom">Nom</label>
+          <input class="form-control" type="text" name="nom" id="cm-nom" placeholder="Nom de l'entreprise" required>
+        </div>
+        <div class="cible-modal-row">
+          <label for="cm-description">Description</label>
+          <input class="form-control" type="text" name="description" id="cm-description" placeholder="Description">
+        </div>
+        <div class="cible-modal-row">
+          <label for="cm-url">URL</label>
+          <input class="form-control" type="url" name="url" id="cm-url" placeholder="https://...">
+        </div>
+        <div class="cible-modal-row">
+          <label for="cm-email">Email</label>
+          <input class="form-control" type="email" name="email" id="cm-email" placeholder="Email de contact">
+        </div>
+        <div class="cible-modal-row">
+          <label for="cm-linkedin">LinkedIn</label>
+          <input class="form-control" type="url" name="linkedin" id="cm-linkedin" placeholder="https://linkedin.com/company/...">
+        </div>
+      </div>
+      <div class="cible-modal-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="cible-modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="cible-modal-ok">Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  // --- Cible modal ---
+  var overlay = document.getElementById('cible-modal-overlay');
+  var form = document.getElementById('cible-modal-form');
+  var titleEl = document.getElementById('cible-modal-title');
+  var okBtn = document.getElementById('cible-modal-ok');
+  var cancelBtn = document.getElementById('cible-modal-cancel');
+  var cmCategorie = document.getElementById('cm-categorie');
+  var cmNom = document.getElementById('cm-nom');
+  var cmDescription = document.getElementById('cm-description');
+  var cmUrl = document.getElementById('cm-url');
+  var cmEmail = document.getElementById('cm-email');
+  var cmLinkedin = document.getElementById('cm-linkedin');
+
+  window.openCibleModal = function(mode, data) {
+    data = data || {};
+    if (mode === 'edit') {
+      titleEl.textContent = 'Modifier la cible';
+      okBtn.textContent = 'Enregistrer';
+      var editUrl = '/cibles/' + data.id + '/edit';
+      form.action = editUrl;
+      form.setAttribute('hx-post', editUrl);
+      cmCategorie.value = '';
+      cmNom.value = data.nom || '';
+      cmDescription.value = data.description || '';
+      cmUrl.value = data.url || '';
+      cmEmail.value = data.email || '';
+      cmLinkedin.value = data.linkedin || '';
+    } else {
+      titleEl.textContent = 'Ajouter une cible';
+      okBtn.textContent = 'Ajouter';
+      var addUrl = '{{ url_for("main.cibles_add") }}';
+      form.action = addUrl;
+      form.setAttribute('hx-post', addUrl);
+      cmCategorie.value = data.categorie || '';
+      cmNom.value = '';
+      cmDescription.value = '';
+      cmUrl.value = '';
+      cmEmail.value = '';
+      cmLinkedin.value = '';
+    }
+    form.classList.remove('htmx-request');
+    okBtn.classList.remove('htmx-request');
+    if (typeof htmx !== 'undefined') htmx.process(form);
+    overlay.classList.add('active');
+    cmNom.focus();
+  };
+
+  function closeCibleModal() {
+    overlay.classList.remove('active');
+  }
+
+  cancelBtn.addEventListener('click', closeCibleModal);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeCibleModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closeCibleModal();
+  });
+
+  // --- Delegated click handler (collapse, edit) ---
+  document.addEventListener('click', function(e) {
+    // Collapse/expand
+    var header = e.target.closest('.cible-section-header');
+    if (header && !e.target.closest('button')) {
+      var cat = header.dataset.cat;
+      var body = document.getElementById('section-' + cat);
+      var chevron = header.querySelector('.cible-chevron');
+      if (body && chevron) {
+        var collapsed = body.classList.toggle('collapsed');
+        chevron.classList.toggle('rotated', collapsed);
+      }
+      return;
+    }
+    // Edit button
+    var editBtn = e.target.closest('.cible-btn-edit');
+    if (editBtn) {
+      openCibleModal('edit', {
+        id: editBtn.dataset.id,
+        nom: editBtn.dataset.nom,
+        description: editBtn.dataset.description,
+        url: editBtn.dataset.url,
+        email: editBtn.dataset.email,
+        linkedin: editBtn.dataset.linkedin
+      });
+      return;
+    }
+  });
+
+  // --- Delegated submit handler (delete confirmation) ---
+  document.addEventListener('submit', function(e) {
+    var form = e.target.closest('.cible-delete-form');
+    if (!form) return;
+    e.preventDefault();
+    var nom = form.dataset.nom;
+    var count = parseInt(form.dataset.count, 10) || 0;
+    var msg = '';
+    if (count > 0) {
+      msg = '<strong>' + count + ' candidature' + (count > 1 ? 's' : '')
+          + '</strong> et ' + (count > 1 ? 'leurs' : 'ses')
+          + ' fichiers seront definitivement supprimes.';
+    } else {
+      msg = 'Cette action est irreversible.';
+    }
+    confirmModal('Supprimer "' + nom + '" ?', msg).then(function(ok) {
+      if (ok) {
+        if (typeof htmx !== 'undefined') htmx.trigger(form, 'submit');
+        else form.submit();
+      }
+    });
+  });
+
+  // --- Delegated change handler (checkbox toggle) ---
+  document.addEventListener('change', function(e) {
+    var cb = e.target.closest('.cible-checkbox');
+    if (!cb) return;
+    var company = cb.dataset.company;
+    var checked = cb.checked;
+    fetch('{{ url_for("main.cibles_toggle") }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'company=' + encodeURIComponent(company) + '&checked=' + (checked ? 'true' : 'false')
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+      if (!data.ok) cb.checked = !checked;
+      else updateCounters();
+    })
+    .catch(function() { cb.checked = !checked; });
+  });
+
+  function updateCounters() {
+    document.querySelectorAll('.cible-list').forEach(function(list) {
+      var total = list.querySelectorAll('.cible-card').length;
+      var checked = list.querySelectorAll('.cible-checkbox:checked').length;
+      var card = list.closest('.card');
+      var counter = card.querySelector('.cible-counter');
+      if (counter) counter.textContent = checked + '/' + total;
+    });
+  }
+
+  // --- Close modal + re-init drag after HTMX swap ---
+  document.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'cibles-content' || evt.detail.target.closest('#cibles-content')) {
+      closeCibleModal();
+      initDragAndDrop();
+    }
+  });
+
+  // --- Drag and drop (requires per-element binding) ---
+  var dragSrc = null;
+  function initDragAndDrop() {
+    document.querySelectorAll('.cible-card[draggable="true"]').forEach(function(card) {
+      card.addEventListener('dragstart', function(e) {
+        dragSrc = this;
+        this.classList.add('cible-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', this.dataset.id);
+      });
+      card.addEventListener('dragend', function() {
+        this.classList.remove('cible-dragging');
+        document.querySelectorAll('.cible-drag-over').forEach(function(el) {
+          el.classList.remove('cible-drag-over');
+        });
+      });
+      card.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (this !== dragSrc && this.dataset.cat === dragSrc.dataset.cat) {
+          this.classList.add('cible-drag-over');
+        }
+      });
+      card.addEventListener('dragleave', function() {
+        this.classList.remove('cible-drag-over');
+      });
+      card.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('cible-drag-over');
+        if (this === dragSrc) return;
+        if (this.dataset.cat !== dragSrc.dataset.cat) return;
+
+        var list = this.closest('.cible-list');
+        var cards = Array.from(list.querySelectorAll('.cible-card'));
+        var fromIdx = cards.indexOf(dragSrc);
+        var toIdx = cards.indexOf(this);
+
+        if (fromIdx < toIdx) {
+          list.insertBefore(dragSrc, this.nextSibling);
+        } else {
+          list.insertBefore(dragSrc, this);
+        }
+
+        var ordered = Array.from(list.querySelectorAll('.cible-card')).map(function(c) {
+          return parseInt(c.dataset.id);
+        });
+        fetch('/api/cibles/reorder', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({categorie: this.dataset.cat, ordered_ids: ordered})
+        });
+      });
+    });
+  }
+  initDragAndDrop();
+})();
+</script>
+{% endblock %}

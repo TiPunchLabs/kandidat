@@ -1,0 +1,95 @@
+---
+repos:
+  # =============================================================================
+  # General hooks
+  # =============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+        exclude: (^\.venv/)
+      - id: trailing-whitespace
+        exclude: (^\.venv/)
+      - id: check-merge-conflict
+      - id: check-yaml
+        files: \.(yml|yaml)$
+        exclude: (^\.venv/)
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-json
+      - id: check-ast
+      - id: check-added-large-files
+        args: [--maxkb=500]
+      - id: detect-private-key
+      - id: debug-statements
+
+  # =============================================================================
+  # Security
+  # =============================================================================
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: "1.9.3"
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies: ["bandit[toml]"]
+        exclude: (^tests/)
+
+  # =============================================================================
+  # Commit message
+  # =============================================================================
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.13.7
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  # =============================================================================
+  # YAML
+  # =============================================================================
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.38.0
+    hooks:
+      - id: yamllint
+        files: \.(yml|yaml)$
+        exclude: (^\.venv/)
+
+  # =============================================================================
+  # Python (ruff - linting + formatting)
+  # =============================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+        exclude: (^\.venv/)
+      - id: ruff-format
+        exclude: (^\.venv/)
+
+  # =============================================================================
+  # Markdown
+  # =============================================================================
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.47.0
+    hooks:
+      - id: markdownlint
+        args: ["--fix"]
+        exclude: (^\.venv/|^\.specify/|^\.claude/|^\.specify/features/|CHANGELOG\.md|CLAUDE\.md)
+
+  # =============================================================================
+  # Spelling
+  # =============================================================================
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        args:
+          - "--skip"
+          - ".venv,*.lock,*.json,*.pdf,*.docx,CLAUDE.md"
+          - "--ignore-words-list"
+          - "sur,mis,poste,offre,candidature,entreprise,equipe,relancee,envoyee,recherche,contenu,fichier,carte,manuel,cible,statut,categorie,invalide,priorites,statuts,groupe,groupes,ressources,bord,reponse,succes,complet,existant,inexistant,perimetre,visibles,caracteres,correspondant,attributs,matchs,defaut,projet,projets,developpement,installe,classe,methodes,fonctions,processus,separes,detectes,aligne,probleme,dependance,gere,termine,fonction,oriente,responsable,juge,ans,environnement,adapte,vise,parametres,configuree,informations,objet,valide"
+        exclude: (^\.venv/|^\.claude/|^\.specify/|^\.specify/features/|^templates/)

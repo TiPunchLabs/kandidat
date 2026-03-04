@@ -1,0 +1,318 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cible.nom }} - kandidat{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('main.cibles') }}">Cibles</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ cible.nom }}</li>
+  </ol>
+</nav>
+
+<div class="row g-3">
+  <!-- Main info -->
+  <div class="col-md-8">
+    <!-- Fiche entreprise -->
+    <div class="card mb-3 animate-in">
+      <div class="card-header">
+        <div class="detail-header">
+          <h2>{{ cible.nom }}</h2>
+          <span class="badge badge-cat-{{ cible.categorie }}">{{ category_labels.get(cible.categorie, cible.categorie) }}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <table class="detail-meta-table">
+          <tr><th>Categorie</th><td><span class="badge badge-cat-{{ cible.categorie }}">{{ cible.categorie }}</span></td></tr>
+          {% if cible.description %}<tr><th>Description</th><td>{{ cible.description }}</td></tr>{% endif %}
+          {% if cible.url %}<tr><th>Site web</th><td><a href="{{ cible.url }}" target="_blank" rel="noopener">{{ cible.url }}</a></td></tr>{% endif %}
+          {% if cible.linkedin %}<tr><th>LinkedIn</th><td><a href="{{ cible.linkedin }}" target="_blank" rel="noopener">{{ cible.linkedin }}</a></td></tr>{% endif %}
+          {% if cible.email %}<tr><th>Email</th><td><a href="mailto:{{ cible.email }}">{{ cible.email }}</a></td></tr>{% endif %}
+        </table>
+      </div>
+    </div>
+
+    <!-- Contacts -->
+    <div class="card mb-3 animate-in">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          Contacts ({{ cible.contacts | length }})
+        </h5>
+        <button class="btn btn-secondary btn-sm" type="button"
+                onclick="openContactModal('add')"
+                style="padding:4px 10px;font-size:0.78rem">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ajouter
+        </button>
+      </div>
+      <div class="card-body" style="padding:0.65rem 1rem">
+        {% include "partials/contacts_list.html" %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Side panel -->
+  <div class="col-md-4">
+    <!-- Edit cible form -->
+    <div class="card mb-3 animate-in">
+      <div class="card-header">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Modifier
+        </h5>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{{ url_for('main.cible_detail_edit', cible_id=cible.id) }}">
+          <div class="mb-3">
+            <label for="cible-nom" class="form-label">Nom</label>
+            <input type="text" name="nom" id="cible-nom" class="form-control form-control-sm" value="{{ cible.nom }}">
+          </div>
+          <div class="mb-3">
+            <label for="cible-description" class="form-label">Description</label>
+            <input type="text" name="description" id="cible-description" class="form-control form-control-sm" value="{{ cible.description }}">
+          </div>
+          <div class="mb-3">
+            <label for="cible-url" class="form-label">URL</label>
+            <input type="url" name="url" id="cible-url" class="form-control form-control-sm" value="{{ cible.url }}">
+          </div>
+          <div class="mb-3">
+            <label for="cible-linkedin" class="form-label">LinkedIn</label>
+            <input type="url" name="linkedin" id="cible-linkedin" class="form-control form-control-sm" value="{{ cible.linkedin }}" placeholder="https://linkedin.com/company/...">
+          </div>
+          <div class="mb-3">
+            <label for="cible-email" class="form-label">Email</label>
+            <input type="email" name="email" id="cible-email" class="form-control form-control-sm" value="{{ cible.email }}">
+          </div>
+          <div class="mb-3">
+            <label for="cible-categorie" class="form-label">Categorie</label>
+            <select name="categorie" id="cible-categorie" class="form-select form-select-sm">
+              {% for cat in categories %}
+              <option value="{{ cat }}" {{ 'selected' if cat == cible.categorie }}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm w-100">Enregistrer</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Candidatures liees -->
+    <div class="card mb-3 animate-in">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Candidatures liees
+        </h5>
+        <a href="{{ url_for('main.create_candidature_form', cible_id=cible.id) }}"
+           class="btn btn-secondary btn-sm"
+           style="padding:4px 10px;font-size:0.78rem">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nouvelle candidature
+        </a>
+      </div>
+      <div class="card-body" style="padding:0.65rem 1rem">
+        {% if cible.candidatures %}
+        {% for c in cible.candidatures %}
+        <div class="file-list-item">
+          <a href="{{ url_for('main.detail', slug=c.slug) }}" style="font-weight:500;font-size:0.85rem">
+            {{ c.entreprise }}
+          </a>
+          <span class="badge badge-{{ c.statut }}" style="margin-left:auto">{{ c.statut }}</span>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p style="color:var(--text-tertiary);font-size:0.82rem;margin:0">Aucune candidature active.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Enrichissement IA -->
+    {% if enrichment_available %}
+    <div class="card mb-3 animate-in">
+      <div class="card-body">
+        <a href="{{ url_for('main.cible_enrich_loading', cible_id=cible.id) }}"
+           class="btn btn-outline-primary btn-sm w-100">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          Enrichir via IA
+        </a>
+        <small class="text-muted d-block mt-1" style="font-size:0.75rem">
+          Recherche web + extraction par IA des informations entreprise et contacts.
+        </small>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Danger zone -->
+    <div class="card mb-3 animate-in">
+      <div class="card-body">
+        <form method="post" action="{{ url_for('main.cible_detail_delete', cible_id=cible.id) }}"
+              class="cible-page-delete-form"
+              data-nom="{{ cible.nom }}" data-count="{{ cible.candidatures | length }}">
+          <button type="submit" class="btn btn-sm confirm-btn-danger w-100">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+            </svg>
+            Supprimer cette cible
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modale contact (ajout/modification) -->
+<div class="cible-modal-overlay" id="contact-modal-overlay">
+  <div class="cible-modal" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
+    <h4 class="cible-modal-title" id="contact-modal-title"></h4>
+    <form id="contact-modal-form" method="post"
+          hx-target="#contacts-container"
+          hx-swap="outerHTML"
+          hx-disabled-elt="find button[type='submit']">
+      <div class="cible-modal-fields">
+        <div class="cible-modal-row">
+          <label for="ct-nom">Nom *</label>
+          <input class="form-control" type="text" name="nom" id="ct-nom" placeholder="Nom" required>
+        </div>
+        <div class="cible-modal-row">
+          <label for="ct-prenom">Prenom</label>
+          <input class="form-control" type="text" name="prenom" id="ct-prenom" placeholder="Prenom">
+        </div>
+        <div class="cible-modal-row">
+          <label for="ct-fonction">Fonction</label>
+          <input class="form-control" type="text" name="fonction" id="ct-fonction" placeholder="Fonction / Poste">
+        </div>
+        <div class="cible-modal-row">
+          <label for="ct-email">Email</label>
+          <input class="form-control" type="email" name="email" id="ct-email" placeholder="email@exemple.com">
+        </div>
+        <div class="cible-modal-row">
+          <label for="ct-telephone">Telephone</label>
+          <input class="form-control" type="tel" name="telephone" id="ct-telephone" placeholder="+590 ...">
+        </div>
+        <div class="cible-modal-row">
+          <label for="ct-linkedin">LinkedIn</label>
+          <input class="form-control" type="url" name="linkedin" id="ct-linkedin" placeholder="https://linkedin.com/in/...">
+        </div>
+      </div>
+      <div class="cible-modal-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="contact-modal-cancel">Annuler</button>
+        <button type="submit" class="btn btn-primary btn-sm" id="contact-modal-ok">Ajouter</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var overlay = document.getElementById('contact-modal-overlay');
+  var form = document.getElementById('contact-modal-form');
+  var titleEl = document.getElementById('contact-modal-title');
+  var okBtn = document.getElementById('contact-modal-ok');
+  var cancelBtn = document.getElementById('contact-modal-cancel');
+  var cibleId = {{ cible.id }};
+
+  window.openContactModal = function(mode, data) {
+    data = data || {};
+    if (mode === 'edit') {
+      titleEl.textContent = 'Modifier le contact';
+      okBtn.textContent = 'Enregistrer';
+      var editUrl = '/cible/' + cibleId + '/contact/' + data.id + '/edit';
+      form.action = editUrl;
+      form.setAttribute('hx-post', editUrl);
+      document.getElementById('ct-nom').value = data.nom || '';
+      document.getElementById('ct-prenom').value = data.prenom || '';
+      document.getElementById('ct-fonction').value = data.fonction || '';
+      document.getElementById('ct-email').value = data.email || '';
+      document.getElementById('ct-telephone').value = data.telephone || '';
+      document.getElementById('ct-linkedin').value = data.linkedin || '';
+    } else {
+      titleEl.textContent = 'Ajouter un contact';
+      okBtn.textContent = 'Ajouter';
+      var addUrl = '/cible/' + cibleId + '/contact/add';
+      form.action = addUrl;
+      form.setAttribute('hx-post', addUrl);
+      document.getElementById('ct-nom').value = '';
+      document.getElementById('ct-prenom').value = '';
+      document.getElementById('ct-fonction').value = '';
+      document.getElementById('ct-email').value = '';
+      document.getElementById('ct-telephone').value = '';
+      document.getElementById('ct-linkedin').value = '';
+    }
+    form.classList.remove('htmx-request');
+    document.getElementById('contact-modal-ok').classList.remove('htmx-request');
+    if (typeof htmx !== 'undefined') htmx.process(form);
+    overlay.classList.add('active');
+    document.getElementById('ct-nom').focus();
+  };
+
+  function closeContactModal() {
+    overlay.classList.remove('active');
+  }
+
+  cancelBtn.addEventListener('click', closeContactModal);
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeContactModal();
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closeContactModal();
+  });
+
+  // Close contact modal after HTMX swap
+  document.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'contacts-container' || evt.detail.target.closest('#contacts-container')) {
+      closeContactModal();
+    }
+  });
+
+  // Delegated submit handler for delete confirmations
+  document.addEventListener('submit', function(e) {
+    // Contact delete
+    var contactForm = e.target.closest('.contact-delete-form');
+    if (contactForm) {
+      e.preventDefault();
+      var nom = contactForm.dataset.nom;
+      confirmModal('Supprimer "' + nom + '" ?', 'Ce contact sera definitivement supprime.').then(function(ok) {
+        if (ok) {
+          if (typeof htmx !== 'undefined') htmx.trigger(contactForm, 'submit');
+          else contactForm.submit();
+        }
+      });
+      return;
+    }
+    // Cible page delete
+    var cibleForm = e.target.closest('.cible-page-delete-form');
+    if (cibleForm) {
+      e.preventDefault();
+      var cibleNom = cibleForm.dataset.nom;
+      var count = parseInt(cibleForm.dataset.count, 10) || 0;
+      var msg = '';
+      if (count > 0) {
+        msg = '<strong>' + count + ' candidature' + (count > 1 ? 's' : '')
+            + '</strong> et ' + (count > 1 ? 'leurs' : 'ses')
+            + ' fichiers seront definitivement supprimes.';
+      } else {
+        msg = 'Cette action est irreversible.';
+      }
+      confirmModal('Supprimer "' + cibleNom + '" ?', msg).then(function(ok) {
+        if (ok) cibleForm.submit();
+      });
+      return;
+    }
+  });
+})();
+</script>
+{% endblock %}
