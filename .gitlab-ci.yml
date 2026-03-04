@@ -5,6 +5,8 @@ stages:
 
 default:
   image: python:3.12
+  tags:
+    - homelab
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
