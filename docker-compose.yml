@@ -1,7 +1,33 @@
 services:
+  # ---------------------------------------------------------------------------
+  # Production — deployed on dockhost via CI/CD pipeline
+  # ---------------------------------------------------------------------------
+  kandidat:
+    image: ${CI_REGISTRY_IMAGE}:${IMAGE_TAG:-main}
+    profiles: ["prod"]
+    ports:
+      - "8000:8000"
+    volumes:
+      - ${KANDIDAT_DATA_PATH:-./data/prod}:/app/data
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - KANDIDAT_ENV=prod
+      - FT_DATA_DIR=/app/data
+      - DATABASE_URL=${DATABASE_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Development — local only (with local PostgreSQL)
+  # ---------------------------------------------------------------------------
   postgres:
     image: postgres:17-alpine
-    profiles: ["prod", "dev"]
+    profiles: ["dev"]
     ports:
       - "5433:5432"
     environment:
@@ -15,29 +41,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-    restart: unless-stopped
-
-  kandidat:
-    build: .
-    profiles: ["prod"]
-    ports:
-      - "8000:8000"
-    volumes:
-      - ${KANDIDAT_DATA_PATH:-./data/prod}:/app/data
-    environment:
-      - SECRET_KEY=${SECRET_KEY:-kandidat-change-me}
-      - KANDIDAT_ENV=prod
-      - FT_DATA_DIR=/app/data
-      - DATABASE_URL=postgresql+psycopg://kandidat:${POSTGRES_PASSWORD:-kandidat}@postgres:5432/kandidat
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
     restart: unless-stopped
 
   kandidat-dev:
@@ -59,6 +62,9 @@ services:
         condition: service_healthy
     command: ["flask", "run", "--host", "0.0.0.0", "--port", "8000", "--debug"]
 
+  # ---------------------------------------------------------------------------
+  # Ollama — optional local LLM (requires GPU)
+  # ---------------------------------------------------------------------------
   ollama:
     image: ollama/ollama:latest
     profiles: ["ollama"]

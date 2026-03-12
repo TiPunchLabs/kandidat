@@ -10,6 +10,7 @@ __pycache__/
 
 # Secrets & credentials
 .env
+.envrc
 .envrc.local
 *.pem
 credentials*

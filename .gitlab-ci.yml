@@ -4,6 +4,7 @@ stages:
   - security
   - build
   - release
+  - deploy
 
 default:
   image: python:3.12
@@ -18,8 +19,8 @@ default:
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   UV_CACHE_DIR: "$CI_PROJECT_DIR/.cache/uv"
-  IMAGE_SHA: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-  IMAGE_BRANCH: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  IMAGE_SHA: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
+  IMAGE_BRANCH: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
 
 # =============================================================================
 # Templates
@@ -82,6 +83,8 @@ build:
   stage: build
   extends: .docker-job
   script:
+    - echo "IMAGE_SHA=$IMAGE_SHA"
+    - echo "IMAGE_BRANCH=$IMAGE_BRANCH"
     - docker build -t $IMAGE_SHA -t $IMAGE_BRANCH .
     - docker push $IMAGE_SHA
     - docker push $IMAGE_BRANCH
@@ -100,3 +103,24 @@ release:
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
   rules:
     - if: $CI_COMMIT_TAG
+
+# =============================================================================
+# Deploy — via bastion runner + Ansible (main only, manual gate)
+# =============================================================================
+deploy:
+  stage: deploy
+  tags:
+    - bastion
+  image: null
+  cache: {}
+  before_script: []
+  script:
+    - cd ~/homelab/dockhost
+    - ~/.local/bin/uv run ansible-playbook ansible/deploy.yml --tags kandidat
+      -e "kandidat_image_tag=$CI_COMMIT_SHORT_SHA"
+  environment:
+    name: production
+    url: $DEPLOY_URL
+  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
