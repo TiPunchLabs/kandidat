@@ -81,6 +81,18 @@ repos:
         exclude: (^\.venv/|^\.specify/|^\.claude/|^\.specify/features/|CHANGELOG\.md|CLAUDE\.md)
 
   # =============================================================================
+  # GitLab CI
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: gitlab-ci-lint
+        name: GitLab CI Lint
+        entry: glab ci lint
+        language: system
+        files: '\.gitlab-ci\.yml$'
+        pass_filenames: true
+
+  # =============================================================================
   # Spelling
   # =============================================================================
   - repo: https://github.com/codespell-project/codespell
