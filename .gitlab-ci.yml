@@ -8,8 +8,6 @@ stages:
 
 default:
   image: python:3.12
-  tags:
-    - homelab
   cache:
     key: ${CI_COMMIT_REF_SLUG}
     paths:
@@ -31,10 +29,9 @@ variables:
     - uv sync --frozen
 
 .docker-job:
-  tags:
-    - homelab
-    - docker
   image: docker:latest
+  services:
+    - docker:dind
   cache: {}
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
