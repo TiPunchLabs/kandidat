@@ -133,7 +133,8 @@ def api_update_candidature(slug):
         if "categorie_entreprise" in fields and fields["categorie_entreprise"] not in CATEGORIES:
             return jsonify({"error": f"Categorie invalide: {fields['categorie_entreprise']}"}), 400
 
-        update_candidature(slug, fields)
+        commentaire = data.get("commentaire")
+        update_candidature(slug, fields, commentaire=commentaire)
         updated = load_candidature(slug)
         return jsonify({"data": updated}), 200
     except Exception:

@@ -8,7 +8,9 @@ from pydantic import ValidationError
 from api import api_bp
 from services.candidature import (
     CATEGORIES,
+    CIBLE_TO_CANDIDATURE_CATEGORIE,
     PRIORITES,
+    STATUS_TRANSITIONS,
     STATUTS,
     TYPES,
     list_candidatures,
@@ -30,6 +32,31 @@ from services.schemas import CibleCreate, CibleResponse, CibleUpdate, ContactCre
 from services.search import search_candidatures
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Enums
+# ---------------------------------------------------------------------------
+
+
+@api_bp.route("/enums", methods=["GET"])
+def api_enums():
+    """Return all enum values, status transitions, and category mappings."""
+    from services.cibles import CATEGORIES as CIBLE_CATEGORIES
+
+    return jsonify(
+        {
+            "data": {
+                "statuts": STATUTS,
+                "types": TYPES,
+                "priorites": PRIORITES,
+                "categories_candidature": CATEGORIES,
+                "categories_cible": list(CIBLE_CATEGORIES),
+                "status_transitions": {k: sorted(v) for k, v in STATUS_TRANSITIONS.items()},
+                "cible_to_candidature_mapping": CIBLE_TO_CANDIDATURE_CATEGORIE,
+            }
+        }
+    )
+
 
 # ---------------------------------------------------------------------------
 # Cibles
