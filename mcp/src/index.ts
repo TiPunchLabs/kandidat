@@ -12,8 +12,9 @@ import { createServer } from "node:http";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 
-import { registerCandidatureReadTools } from "./tools/candidatures.js";
-import { registerCibleReadTools } from "./tools/cibles.js";
+import { registerCandidatureReadTools, registerCandidatureWriteTools } from "./tools/candidatures.js";
+import { registerCibleReadTools, registerCibleWriteTools } from "./tools/cibles.js";
+import { registerContactTools } from "./tools/contacts.js";
 import { registerSearchTools } from "./tools/search.js";
 import { registerEnumResources } from "./resources/enums.js";
 
@@ -27,7 +28,10 @@ function createMcpServer(): McpServer {
 
   // Register all tools
   registerCandidatureReadTools(server);
+  registerCandidatureWriteTools(server);
   registerCibleReadTools(server);
+  registerCibleWriteTools(server);
+  registerContactTools(server);
   registerSearchTools(server);
 
   // Register resources
