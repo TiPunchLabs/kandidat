@@ -34,6 +34,7 @@ The deliberately simple stack (Flask, SQLite, Jinja2, vanilla CSS) is intentiona
 - **PDF & DOCX export**: convert adapted CV to PDF (WeasyPrint with print-safe CSS, A4 layout) and DOCX (semantic HTML parsing, ATS-optimized structure)
 - **AI-powered company enrichment**: automatically enrich target company information via web search (Tavily) + LLM structured extraction — finds website, LinkedIn, description, contacts with review before applying
 - **Settings page**: configure LLM provider (Ollama/Claude), upload global reference CV with preview, edit system and user prompts, configure Tavily API key for web search
+- **MCP Server**: a TypeScript MCP server exposes 22 tools so an LLM agent (Claude Desktop, Claude Code) can manage applications, companies, and contacts via natural language — all through the REST API, respecting every business rule
 
 ## Screenshots
 
@@ -43,36 +44,6 @@ Filterable and sortable table with KPI cards, status/type/priority/category filt
 
 ![Dashboard](doc/screenshots/dashboard.png)
 
-### Application detail
-
-Full view with metadata, status history timeline, markdown content, and attached files.
-
-![Application detail](doc/screenshots/detail.png)
-
-### Target companies
-
-Companies organized by category with drag & drop reordering.
-
-![Target companies](doc/screenshots/cibles.png)
-
-### Company detail
-
-Company information with contacts and linked applications.
-
-![Company detail](doc/screenshots/cible-detail.png)
-
-### Statistics
-
-Breakdown by status, type, priority, category, and chronological timeline.
-
-![Statistics](doc/screenshots/stats.png)
-
-### Dark theme
-
-One of 4 switchable themes (Precision, Vibrant, Dark, Pastel).
-
-![Dark theme](doc/screenshots/dashboard-dark.png)
-
 ## Prerequisites
 
 - Python 3.12+
@@ -80,6 +51,7 @@ One of 4 switchable themes (Precision, Vibrant, Dark, Pastel).
 - For PDF export: WeasyPrint system dependencies ([installation guide](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html))
 - For LLM adaptation: Ollama running locally, or a Claude API key
 - For company enrichment: a [Tavily](https://tavily.com) API key (web search)
+- For MCP server: Node.js 22+, [pnpm](https://pnpm.io/) (package manager)
 
 ## Installation
 
@@ -130,6 +102,35 @@ docker compose --profile dev up
 ```
 
 Data is persisted in a `kandidat-data` Docker volume mounted at `/app/data` (SQLite database + uploaded files).
+
+## MCP Server (LLM agent integration)
+
+The MCP server lets an LLM agent interact with kandidat via natural language. It runs locally and calls the kandidat REST API.
+
+```bash
+# Install and build
+cd mcp && pnpm install && pnpm build
+
+# Run (pointing to local kandidat)
+KANDIDAT_API_URL=http://localhost:8000 pnpm dev
+
+# Or pointing to production (dockhost)
+KANDIDAT_API_URL=http://kandidat.local:8000 pnpm dev
+```
+
+Then configure Claude Desktop or Claude Code to connect:
+
+```json
+{
+  "mcpServers": {
+    "kandidat": {
+      "url": "http://127.0.0.1:3001/mcp"
+    }
+  }
+}
+```
+
+See [doc/mcp-architecture-proposal.md](doc/mcp-architecture-proposal.md) for the full architecture design.
 
 ## Tests
 
@@ -214,6 +215,9 @@ templates/            # Jinja2 templates
 static/               # CSS (custom design system)
 tests/                # pytest test suite
 doc/                  # Technical documentation
+mcp/                  # MCP Server (TypeScript, streamable HTTP)
+  src/                # Tools, resources, HTTP client
+  package.json        # Node.js dependencies
 Dockerfile            # Multi-stage build (uv + WeasyPrint runtime)
 docker-compose.yml    # Prod, dev (hot-reload), Ollama profiles
 ```

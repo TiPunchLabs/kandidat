@@ -7,6 +7,7 @@
 - [direnv](https://direnv.net/) (optional, auto-activates the venv)
 - [pass](https://www.passwordstore.org/) (optional, secret management)
 - WeasyPrint system dependencies for PDF export ([installation guide](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html))
+- Node.js 22+ and [pnpm](https://pnpm.io/) (for MCP server only)
 
 ## Installation
 
@@ -31,6 +32,11 @@ uv sync
 | Lint | `uv run ruff check .` |
 | Format | `uv run ruff format .` |
 | Security scan | `uv run bandit -c pyproject.toml -r services/ api/ routes.py app.py` |
+| **MCP Server** | |
+| Install MCP deps | `cd mcp && pnpm install` |
+| Build MCP server | `cd mcp && pnpm build` |
+| Run MCP (dev local) | `cd mcp && KANDIDAT_API_URL=http://localhost:8000 pnpm dev` |
+| Run MCP (prod) | `cd mcp && KANDIDAT_API_URL=http://kandidat.local:8000 pnpm dev` |
 
 
 ## Code structure
@@ -64,6 +70,11 @@ templates/          Jinja2 templates
 static/             Custom CSS
 tests/              pytest tests
 doc/                Technical documentation
+mcp/                MCP Server (TypeScript)
+  src/index.ts      Entry point (HTTP server, port 3001)
+  src/client.ts     HTTP client for kandidat API
+  src/tools/        Tool definitions (candidatures, cibles, contacts, search, AI)
+  src/resources/    MCP resources (enums, status transitions)
 ```
 
 ## Conventions
@@ -139,3 +150,44 @@ def _migrate_new_feature():
 2. Register the provider in `get_provider()` factory in `services/llm/__init__.py`
 3. Add configuration fields in the settings page (`templates/settings.html`)
 4. Add tests in `tests/test_llm.py`
+
+## Adding an MCP tool
+
+1. Add the API endpoint in Flask if it doesn't exist (follow "Adding an API endpoint" above)
+2. Add the tool registration in the appropriate file under `mcp/src/tools/`
+3. Use `z.object()` for the input schema with `.describe()` on each field
+4. Set annotations: `readOnlyHint`, `destructiveHint`, `idempotentHint`
+5. Import and register the tool in `mcp/src/index.ts`
+6. Run `cd mcp && pnpm build` to verify TypeScript compiles
+
+## Running the MCP server for development
+
+The MCP server is a separate TypeScript process that proxies requests to the kandidat API.
+Both must be running simultaneously.
+
+```bash
+# Terminal 1: start kandidat
+uv run python main.py
+
+# Terminal 2: start MCP server
+cd mcp && KANDIDAT_API_URL=http://localhost:8000 pnpm dev
+```
+
+Then configure your LLM client (Claude Desktop or Claude Code):
+
+```json
+{
+  "mcpServers": {
+    "kandidat": {
+      "url": "http://127.0.0.1:3001/mcp"
+    }
+  }
+}
+```
+
+The MCP server always runs locally on your machine. To point it at the production instance
+on dockhost, change the env var:
+
+```bash
+cd mcp && KANDIDAT_API_URL=http://kandidat.local:8000 pnpm dev
+```

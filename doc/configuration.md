@@ -139,3 +139,76 @@ The Tavily API key is configured via the Settings page in the web interface. Thi
 Get a key at [tavily.com](https://tavily.com). The key is stored in the `settings` table as `tavily_api_key`.
 
 Both Tavily and a LLM provider must be configured for the "Enrichir via IA" button to appear on company detail pages.
+
+## MCP Server configuration
+
+The MCP server (`mcp/`) is a TypeScript process that exposes kandidat's REST API as MCP tools for LLM agents.
+
+### Environment variables
+
+| Variable | Description | Default |
+| --- | --- | --- |
+| `KANDIDAT_API_URL` | Base URL of the kandidat API to proxy | `http://localhost:8000` |
+| `MCP_PORT` | Port for the MCP HTTP server | `3001` |
+
+### Installation
+
+```bash
+cd mcp
+pnpm install
+pnpm build
+```
+
+### Running
+
+```bash
+# Dev (kandidat running locally)
+cd mcp && KANDIDAT_API_URL=http://localhost:8000 pnpm dev
+
+# Prod (kandidat on dockhost)
+cd mcp && KANDIDAT_API_URL=http://kandidat.local:8000 pnpm dev
+# or
+cd mcp && KANDIDAT_API_URL=http://192.168.1.90:8000 pnpm dev
+```
+
+### Claude Desktop configuration
+
+Add to `~/.claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "kandidat": {
+      "url": "http://127.0.0.1:3001/mcp"
+    }
+  }
+}
+```
+
+### Claude Code configuration
+
+Add to `.claude/settings.json` (project) or `~/.claude/settings.json` (global):
+
+```json
+{
+  "mcpServers": {
+    "kandidat": {
+      "url": "http://127.0.0.1:3001/mcp"
+    }
+  }
+}
+```
+
+### Architecture note
+
+The MCP server always runs **on your local machine**, even when pointing at the production
+kandidat instance. It is a lightweight proxy that translates MCP tool calls into HTTP requests.
+It contains zero business logic — all validation is enforced by the kandidat Flask API.
+
+```text
+┌────────────────┐          ┌──────────────┐          ┌──────────────────┐
+│ Claude Desktop │ ──MCP──► │ MCP Server   │ ──HTTP──►│ kandidat API     │
+│ (your machine) │          │ (your machine│          │ (local or        │
+│                │          │  port 3001)  │          │  dockhost:8000)  │
+└────────────────┘          └──────────────┘          └──────────────────┘
+```
