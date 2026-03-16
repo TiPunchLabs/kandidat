@@ -16,6 +16,7 @@ import { registerCandidatureReadTools, registerCandidatureWriteTools } from "./t
 import { registerCibleReadTools, registerCibleWriteTools } from "./tools/cibles.js";
 import { registerContactTools } from "./tools/contacts.js";
 import { registerSearchTools } from "./tools/search.js";
+import { registerAiOperationTools } from "./tools/ai-operations.js";
 import { registerEnumResources } from "./resources/enums.js";
 
 const PORT = parseInt(process.env.MCP_PORT || "3001", 10);
@@ -33,6 +34,7 @@ function createMcpServer(): McpServer {
   registerCibleWriteTools(server);
   registerContactTools(server);
   registerSearchTools(server);
+  registerAiOperationTools(server);
 
   // Register resources
   registerEnumResources(server);
