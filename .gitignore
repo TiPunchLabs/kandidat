@@ -15,6 +15,10 @@ __pycache__/
 *.pem
 credentials*
 
+# Node.js (MCP server)
+node_modules/
+mcp/dist/
+
 # Tools
 .pytest_cache/
 .ruff_cache/
