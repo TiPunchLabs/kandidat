@@ -33,10 +33,22 @@ variable "project_description" {
   default     = "A personal web interface to track and manage job applications — Flask, SQLite, vanilla CSS"
 }
 
+variable "github_mirror_token" {
+  description = "GitHub Personal Access Token (Fine-grained, contents:write) for push mirroring. Set via TF_VAR_github_mirror_token environment variable."
+  type        = string
+  sensitive   = true
+}
+
+variable "github_mirror_owner" {
+  description = "GitHub organization or user owning the mirror repository."
+  type        = string
+  default     = "TiPunchLabs"
+}
+
 variable "visibility_level" {
   description = "Project visibility: 'public', 'internal', or 'private'."
   type        = string
-  default     = "private"
+  default     = "public"
 
   validation {
     condition     = contains(["public", "internal", "private"], var.visibility_level)
