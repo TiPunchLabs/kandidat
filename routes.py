@@ -878,3 +878,34 @@ def cible_enrich_preview(cible_id):
     if data is None:
         abort(404)
     return render_template("cible_enrich_preview.html", cible=data)
+
+
+# ---------------------------------------------------------------------------
+# About
+# ---------------------------------------------------------------------------
+
+
+@bp.route("/help")
+def help_page():
+    return render_template("help.html")
+
+
+@bp.route("/about")
+def about():
+    import sys
+
+    from services.database import db
+
+    python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
+    db_engine = str(db.engine.url).split("://")[0] if db.engine else "unknown"
+    db_label = "PostgreSQL" if "postgresql" in db_engine else "SQLite"
+    llm_provider = get_setting("llm_provider") or "non configure"
+    tavily_configured = bool(get_setting("tavily_api_key"))
+
+    return render_template(
+        "about.html",
+        python_version=python_version,
+        db_label=db_label,
+        llm_provider=llm_provider,
+        tavily_configured=tavily_configured,
+    )

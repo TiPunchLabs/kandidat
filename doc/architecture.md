@@ -3,9 +3,20 @@
 ## Overview
 
 ```text
+  Claude Desktop /           MCP Protocol               ┌──────────────────┐
+  Claude Code         ◄── streamable HTTP ──►           │  MCP Server (TS) │
+  (LLM agent)              port 3001                    │  mcp/src/        │
+                                                        │  22 tools        │
+                                                        │  1 resource      │
+                                                        └────────┬─────────┘
+                                                                 │ HTTP/JSON
+                                                                 ▼
+  Browser ──────────────────────────────────────────────────────────────────
+                    │                                            │
+                    ▼                                            ▼
                     ┌─────────────────────────────────────────────┐
-                    │              Flask Application               │
-                    │                 (app.py)                     │
+                    │           APIFlask Application                │
+                    │          (app.py, docs at /docs)             │
                     ├──────────────────┬──────────────────────────┤
                     │                  │                          │
                routes.py          api/                    templates/
@@ -84,7 +95,7 @@ brouillon ──► envoyee ──► relancee ──► entretien ──► acc
 
 | Blueprint | Prefix | Role |
 | --- | --- | --- |
-| `main` | `/` | HTML pages (dashboard, detail, create, stats, cibles, company detail, search, settings, CV preview/loading, enrichment loading/preview) |
+| `main` | `/` | HTML pages (dashboard, detail, create, stats, cibles, company detail, search, settings, help, about, CV preview/loading, enrichment loading/preview) |
 | `api` | `/api` | JSON endpoints (CRUD applications, companies, contacts, files, stats, search, settings, CV adapt/convert/save, enrichment) |
 
 ## CV adaptation flow
@@ -157,3 +168,42 @@ FT_DATA_DIR/
 ```
 
 Physical files are referenced in the `fichiers` table with a relative path.
+
+## MCP Server layer
+
+The MCP server (`mcp/`) is a **semantic proxy** between an LLM agent and the kandidat API.
+It adds zero business logic — all validation stays in the Flask services layer.
+
+```text
+LLM Agent                          MCP Server                    kandidat API
+─────────                          ──────────                    ────────────
+"List my active                    list_candidatures             GET /api/candidatures
+ applications"          ──►        {statut: "envoyee"}    ──►    ?statut=envoyee
+                                                                      │
+                        ◄──        JSON response           ◄──        │
+"3 applications sent"
+```
+
+### Tool categories (22 total)
+
+| Category | Tools | Annotations |
+| --- | --- | --- |
+| READ (8) | list/get candidatures, cibles, search, stats, settings, historique | `readOnlyHint: true` |
+| WRITE (7) | create/update candidatures, cibles, contacts, historique comment | `idempotentHint: true` (updates) |
+| DELETE (3) | delete candidature, cible, contact | `destructiveHint: true` |
+| AI (4) | enrich cible, apply enrichment, adapt CV, save CV | Mixed annotations |
+
+### Resources
+
+The MCP server exposes a `kandidat://enums` resource loaded from `GET /api/enums`,
+providing all valid enum values and status transitions to the LLM context.
+
+### Configuration
+
+The MCP server always runs **locally** (on the developer's machine). Only the API target
+changes depending on the environment:
+
+| Environment | `KANDIDAT_API_URL` | Use case |
+| --- | --- | --- |
+| Dev local | `http://localhost:8000` | kandidat running via `uv run` or docker-compose |
+| Prod dockhost | `http://kandidat.local:8000` or `http://192.168.1.90:8000` | kandidat deployed on dockhost |

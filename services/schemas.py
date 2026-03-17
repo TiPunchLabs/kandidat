@@ -1,8 +1,13 @@
 """Pydantic v2 schemas for kandidat validation and serialization."""
 
 import json
+import re
 
 from pydantic import BaseModel, field_validator
+
+_VALID_TYPES = {"offre", "spontanee"}
+_VALID_PRIORITES = {"haute", "moyenne", "basse"}
+_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 class CandidatureCreate(BaseModel):
@@ -23,6 +28,20 @@ class CandidatureCreate(BaseModel):
             raise ValueError("entreprise is required")
         return v.strip()
 
+    @field_validator("type")
+    @classmethod
+    def type_valid(cls, v: str) -> str:
+        if v not in _VALID_TYPES:
+            raise ValueError(f"type must be one of {_VALID_TYPES}")
+        return v
+
+    @field_validator("priorite")
+    @classmethod
+    def priorite_valid(cls, v: str) -> str:
+        if v not in _VALID_PRIORITES:
+            raise ValueError(f"priorite must be one of {_VALID_PRIORITES}")
+        return v
+
 
 class CandidatureUpdate(BaseModel):
     """Schema for updating a candidature (all fields optional)."""
@@ -37,6 +56,27 @@ class CandidatureUpdate(BaseModel):
     type: str | None = None
     localisation: str | None = None
     contenu: str | None = None
+
+    @field_validator("type")
+    @classmethod
+    def type_valid(cls, v: str | None) -> str | None:
+        if v is not None and v not in _VALID_TYPES:
+            raise ValueError(f"type must be one of {_VALID_TYPES}")
+        return v
+
+    @field_validator("priorite")
+    @classmethod
+    def priorite_valid(cls, v: str | None) -> str | None:
+        if v is not None and v not in _VALID_PRIORITES:
+            raise ValueError(f"priorite must be one of {_VALID_PRIORITES}")
+        return v
+
+    @field_validator("date_candidature", "date_relance")
+    @classmethod
+    def date_format_valid(cls, v: str | None) -> str | None:
+        if v is not None and v != "" and not _DATE_RE.match(v):
+            raise ValueError("date must be in YYYY-MM-DD format")
+        return v
 
     def non_null_fields(self) -> dict:
         """Return a dict of fields that are not None."""

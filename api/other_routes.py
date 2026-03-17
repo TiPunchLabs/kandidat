@@ -8,7 +8,9 @@ from pydantic import ValidationError
 from api import api_bp
 from services.candidature import (
     CATEGORIES,
+    CIBLE_TO_CANDIDATURE_CATEGORIE,
     PRIORITES,
+    STATUS_TRANSITIONS,
     STATUTS,
     TYPES,
     list_candidatures,
@@ -32,11 +34,38 @@ from services.search import search_candidatures
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Enums
+# ---------------------------------------------------------------------------
+
+
+@api_bp.route("/enums", methods=["GET"])
+@api_bp.doc(tags=["Statistiques"], summary="Get all enum values and status transitions")
+def api_enums():
+    """Return all enum values, status transitions, and category mappings."""
+    from services.cibles import CATEGORIES as CIBLE_CATEGORIES
+
+    return jsonify(
+        {
+            "data": {
+                "statuts": STATUTS,
+                "types": TYPES,
+                "priorites": PRIORITES,
+                "categories_candidature": CATEGORIES,
+                "categories_cible": list(CIBLE_CATEGORIES),
+                "status_transitions": {k: sorted(v) for k, v in STATUS_TRANSITIONS.items()},
+                "cible_to_candidature_mapping": CIBLE_TO_CANDIDATURE_CATEGORIE,
+            }
+        }
+    )
+
+
+# ---------------------------------------------------------------------------
 # Cibles
 # ---------------------------------------------------------------------------
 
 
 @api_bp.route("/cibles", methods=["GET"])
+@api_bp.doc(tags=["Cibles"], summary="List all cibles grouped by category")
 def api_cibles():
     """List all cibles grouped by category."""
     try:
@@ -47,6 +76,7 @@ def api_cibles():
 
 
 @api_bp.route("/cibles", methods=["POST"])
+@api_bp.doc(tags=["Cibles"], summary="Create a new cible")
 def api_cibles_create():
     """Create a new cible."""
     body = request.get_json(silent=True)
@@ -84,6 +114,7 @@ def api_cibles_create():
 
 
 @api_bp.route("/cibles/<int:cible_id>", methods=["PUT"])
+@api_bp.doc(tags=["Cibles"], summary="Update a cible")
 def api_cibles_update(cible_id):
     """Update a cible."""
     body = request.get_json(silent=True)
@@ -120,6 +151,7 @@ def api_cibles_update(cible_id):
 
 
 @api_bp.route("/cibles/<int:cible_id>", methods=["DELETE"])
+@api_bp.doc(tags=["Cibles"], summary="Delete a cible")
 def api_cibles_delete(cible_id):
     """Delete a cible (cascades to linked candidatures and their files)."""
     try:
@@ -132,6 +164,7 @@ def api_cibles_delete(cible_id):
 
 
 @api_bp.route("/cibles/reorder", methods=["POST"])
+@api_bp.doc(tags=["Cibles"], summary="Reorder cibles within a category")
 def api_cibles_reorder():
     """Reorder cibles within a category."""
     body = request.get_json(silent=True)
@@ -152,6 +185,7 @@ def api_cibles_reorder():
 
 
 @api_bp.route("/cibles/toggle", methods=["POST"])
+@api_bp.doc(tags=["Cibles"], summary="Toggle a cible contacted status")
 def api_cibles_toggle():
     """Toggle a company's contacted status."""
     body = request.get_json(silent=True)
@@ -183,6 +217,7 @@ def api_cibles_toggle():
 
 
 @api_bp.route("/cibles/<int:cible_id>/detail", methods=["GET"])
+@api_bp.doc(tags=["Cibles"], summary="Get cible detail with contacts and candidatures")
 def api_cible_detail(cible_id):
     """Get a cible with its contacts and linked candidatures."""
     try:
@@ -195,6 +230,7 @@ def api_cible_detail(cible_id):
 
 
 @api_bp.route("/cibles/<int:cible_id>/contacts", methods=["POST"])
+@api_bp.doc(tags=["Contacts"], summary="Create a contact for a cible")
 def api_contact_create(cible_id):
     """Create a new contact for a cible."""
     body = request.get_json(silent=True)
@@ -236,6 +272,7 @@ def api_contact_create(cible_id):
 
 
 @api_bp.route("/cibles/<int:cible_id>/contacts/<int:contact_id>", methods=["PUT"])
+@api_bp.doc(tags=["Contacts"], summary="Update a contact")
 def api_contact_update(cible_id, contact_id):
     """Update a contact."""
     body = request.get_json(silent=True)
@@ -273,6 +310,7 @@ def api_contact_update(cible_id, contact_id):
 
 
 @api_bp.route("/cibles/<int:cible_id>/contacts/<int:contact_id>", methods=["DELETE"])
+@api_bp.doc(tags=["Contacts"], summary="Delete a contact")
 def api_contact_delete(cible_id, contact_id):
     """Delete a contact."""
     try:
@@ -290,6 +328,7 @@ def api_contact_delete(cible_id, contact_id):
 
 
 @api_bp.route("/search", methods=["GET"])
+@api_bp.doc(tags=["Recherche"], summary="Full-text search across candidatures")
 def api_search():
     """Full-text search across candidatures."""
     query = request.args.get("q", "").strip()
@@ -309,6 +348,7 @@ def api_search():
 
 
 @api_bp.route("/stats", methods=["GET"])
+@api_bp.doc(tags=["Statistiques"], summary="Get statistics by statut, type, priorite, categorie")
 def api_stats():
     """Statistics: counts by statut, type, priorite, categorie + timeline."""
     try:
@@ -349,6 +389,7 @@ def api_stats():
 
 
 @api_bp.route("/dashboard/regenerate", methods=["POST"])
+@api_bp.doc(tags=["Statistiques"], summary="Regenerate Obsidian dashboard")
 def api_dashboard_regenerate():
     """Regenerate 00-Dashboard.md."""
     try:
@@ -364,6 +405,7 @@ def api_dashboard_regenerate():
 
 
 @api_bp.route("/cibles/<int:cible_id>/enrich", methods=["POST"])
+@api_bp.doc(tags=["Enrichissement"], summary="Trigger AI enrichment for a cible")
 def api_cible_enrich(cible_id):
     """Trigger AI enrichment for a cible: web search + LLM extraction."""
     data = get_cible_detail(cible_id)
@@ -385,6 +427,7 @@ def api_cible_enrich(cible_id):
 
 
 @api_bp.route("/cibles/<int:cible_id>/enrich/apply", methods=["POST"])
+@api_bp.doc(tags=["Enrichissement"], summary="Apply selected enrichment suggestions")
 def api_cible_enrich_apply(cible_id):
     """Apply selected enrichment suggestions."""
     data = get_cible_detail(cible_id)

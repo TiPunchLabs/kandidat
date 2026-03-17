@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}A propos — kandidat{% endblock %}
+
+{% block content %}
+<div class="about-page">
+  <div class="about-header">
+    <div class="about-logo">
+      <svg width="32" height="32" viewBox="0 0 100 100">
+        <rect width="100" height="100" rx="16" fill="var(--accent)"/>
+        <text x="50" y="72" font-size="60" text-anchor="middle" fill="white" font-family="system-ui">k</text>
+      </svg>
+    </div>
+    <div>
+      <h1 class="about-title">kandidat</h1>
+      <span class="about-version">v{{ app_version }}</span>
+    </div>
+  </div>
+
+  <p class="about-description">
+    A personal web interface to track and manage job applications.
+    No account, no SaaS, no dependency on a third-party service.
+  </p>
+
+  <div class="about-sections">
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+        </svg>
+        Stack technique
+      </h2>
+      <table class="about-table">
+        <tr><td>Python</td><td>{{ python_version }}</td></tr>
+        <tr><td>Framework</td><td>Flask</td></tr>
+        <tr><td>Base de donnees</td><td>{{ db_label }}</td></tr>
+        <tr><td>Validation</td><td>Pydantic</td></tr>
+        <tr><td>Fournisseur LLM</td><td>{{ llm_provider }}</td></tr>
+        <tr><td>Recherche web</td><td>Tavily {% if tavily_configured %}(configure){% else %}(non configure){% endif %}</td></tr>
+      </table>
+    </div>
+
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        Fonctionnalites
+      </h2>
+      <ul class="about-features">
+        <li>Dashboard filtrable et triable</li>
+        <li>Machine a etats des statuts (brouillon, envoyee, entretien...)</li>
+        <li>Gestion des entreprises cibles et contacts</li>
+        <li>Upload et gestion de fichiers (CV, LM, offres)</li>
+        <li>Statistiques et recherche plein texte</li>
+        <li>Adaptation CV via LLM (Ollama / Claude)</li>
+        <li>Enrichissement entreprise via IA (Tavily + LLM)</li>
+        <li>Export PDF et DOCX</li>
+        <li>4 themes visuels</li>
+        <li>API REST complete</li>
+        <li>Serveur MCP pour agents LLM</li>
+      </ul>
+    </div>
+
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Raccourcis clavier
+      </h2>
+      <table class="about-table">
+        <tr><td><kbd>/</kbd></td><td>Aller a la recherche</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="about-footer">
+    <p>Made with Flask, vanilla CSS, and zero frameworks.</p>
+  </div>
+</div>
+{% endblock %}

@@ -14,7 +14,7 @@ kandidat lets you centralize your applications, track their progress through a c
 
 Existing job application trackers are either too heavy (repurposed CRMs), too limited (spreadsheets), or hosted by a third party (personal data). kandidat was born from a concrete need: a clean web interface that runs locally, with data stored as a SQLite file you can back up, version, or migrate however you want.
 
-The deliberately simple stack (Flask, SQLite, Jinja2, vanilla CSS) is intentional: the code stays readable, modifiable, and extensible without needing to learn a frontend framework or deployment infrastructure.
+The deliberately simple stack (APIFlask, SQLite, Jinja2, vanilla CSS) is intentional: the code stays readable, modifiable, and extensible without needing to learn a frontend framework or deployment infrastructure.
 
 ## Features
 
@@ -28,12 +28,14 @@ The deliberately simple stack (Flask, SQLite, Jinja2, vanilla CSS) is intentiona
 - **Statistics**: breakdown by status, type, priority, category, and chronological timeline
 - **Full-text search**: search across application content and markdown files
 - **Obsidian dashboard**: regenerate an Obsidian-compatible `00-Dashboard.md` with wikilinks
-- **Themes**: 4 visual themes (Precision, Vibrant, Dark, Pastel) switchable on the fly
-- **REST API**: complete JSON endpoints for all resources (applications, companies, contacts, files, history, stats)
+- **Themes**: 4 visual themes (Precision, Dim, Dark, Pastel) switchable on the fly
+- **REST API**: complete JSON endpoints for all resources (applications, companies, contacts, files, history, stats), with auto-generated OpenAPI documentation (Swagger UI at `/docs`)
+- **Help page**: in-app help page with keyboard shortcuts and feature reference
 - **CV adaptation via LLM**: automatically adapt a reference CV to a job application context using a configurable LLM (Ollama local or Claude API), with HTML preview before saving
 - **PDF & DOCX export**: convert adapted CV to PDF (WeasyPrint with print-safe CSS, A4 layout) and DOCX (semantic HTML parsing, ATS-optimized structure)
 - **AI-powered company enrichment**: automatically enrich target company information via web search (Tavily) + LLM structured extraction — finds website, LinkedIn, description, contacts with review before applying
 - **Settings page**: configure LLM provider (Ollama/Claude), upload global reference CV with preview, edit system and user prompts, configure Tavily API key for web search
+- **MCP Server**: a TypeScript MCP server exposes 22 tools so an LLM agent (Claude Desktop, Claude Code) can manage applications, companies, and contacts via natural language — all through the REST API, respecting every business rule
 
 ## Screenshots
 
@@ -43,36 +45,6 @@ Filterable and sortable table with KPI cards, status/type/priority/category filt
 
 ![Dashboard](doc/screenshots/dashboard.png)
 
-### Application detail
-
-Full view with metadata, status history timeline, markdown content, and attached files.
-
-![Application detail](doc/screenshots/detail.png)
-
-### Target companies
-
-Companies organized by category with drag & drop reordering.
-
-![Target companies](doc/screenshots/cibles.png)
-
-### Company detail
-
-Company information with contacts and linked applications.
-
-![Company detail](doc/screenshots/cible-detail.png)
-
-### Statistics
-
-Breakdown by status, type, priority, category, and chronological timeline.
-
-![Statistics](doc/screenshots/stats.png)
-
-### Dark theme
-
-One of 4 switchable themes (Precision, Vibrant, Dark, Pastel).
-
-![Dark theme](doc/screenshots/dashboard-dark.png)
-
 ## Prerequisites
 
 - Python 3.12+
@@ -80,6 +52,7 @@ One of 4 switchable themes (Precision, Vibrant, Dark, Pastel).
 - For PDF export: WeasyPrint system dependencies ([installation guide](https://doc.courtbouillon.org/weasyprint/stable/first_steps.html))
 - For LLM adaptation: Ollama running locally, or a Claude API key
 - For company enrichment: a [Tavily](https://tavily.com) API key (web search)
+- For MCP server: Node.js 22+, [pnpm](https://pnpm.io/) (package manager)
 
 ## Installation
 
@@ -119,17 +92,45 @@ Open <http://localhost:8000> in a browser.
 ## Docker
 
 ```bash
-# Production (gunicorn)
-docker compose --profile prod up -d
-
-# Production + Ollama local
-docker compose --profile prod --profile ollama up -d
-
-# Development (hot-reload)
+# Development (hot-reload + local PostgreSQL)
 docker compose --profile dev up
+
+# Development + Ollama local
+docker compose --profile dev --profile ollama up
 ```
 
-Data is persisted in a `kandidat-data` Docker volume mounted at `/app/data` (SQLite database + uploaded files).
+Data is persisted in a `kandidat-data` Docker volume mounted at `/app/data`.
+
+Production is deployed on dockhost via the CI/CD pipeline (GitLab CI → bastion runner → Ansible playbook). See [doc/deployment.md](doc/deployment.md) for the full deployment architecture.
+
+## MCP Server (LLM agent integration)
+
+The MCP server lets an LLM agent interact with kandidat via natural language. It runs locally and calls the kandidat REST API.
+
+```bash
+# Install and build
+cd mcp && pnpm install && pnpm build
+
+# Run (pointing to local kandidat)
+KANDIDAT_API_URL=http://localhost:8000 pnpm dev
+
+# Or pointing to production (dockhost)
+KANDIDAT_API_URL=http://kandidat.local:8000 pnpm dev
+```
+
+Then configure Claude Desktop or Claude Code to connect:
+
+```json
+{
+  "mcpServers": {
+    "kandidat": {
+      "url": "http://127.0.0.1:3001/mcp"
+    }
+  }
+}
+```
+
+See [doc/mcp-architecture-proposal.md](doc/mcp-architecture-proposal.md) for the full architecture design.
 
 ## Tests
 
@@ -151,7 +152,7 @@ This project is calibrated for a **job-ready developer** (confirmed junior / end
 | Area | Level | Detail |
 | --- | --- | --- |
 | **Overall** | Intermediate | Classic MVC architecture, no black magic |
-| **Backend** | Intermediate | Flask + SQLAlchemy + Pydantic — standard patterns, nothing exotic |
+| **Backend** | Intermediate | APIFlask + SQLAlchemy + Pydantic — standard patterns, nothing exotic |
 | **Frontend** | Easy to intermediate | Jinja2 templates, vanilla CSS with variables, vanilla JS without frameworks |
 | **Database** | Easy | SQLite, simple relational models (FK, cascade), manual migrations |
 | **REST API** | Intermediate | Full CRUD, Pydantic validation, proper HTTP status codes |
@@ -174,11 +175,11 @@ This project is calibrated for a **job-ready developer** (confirmed junior / end
 - External API integration (Tavily web search for company enrichment)
 - Document conversion (HTML to PDF via WeasyPrint, HTML to DOCX via BeautifulSoup + python-docx)
 - Containerization (Docker multi-stage build, Compose profiles, gunicorn)
+- Auto-generated API documentation (APIFlask + Swagger UI)
 
 ### Not covered
 
 - Authentication / authorization
-- Client-server databases (PostgreSQL, MySQL)
 - SPA frontend (React, Vue)
 
 > A solid exercise to consolidate Python web fundamentals before moving to more complex stacks.
@@ -186,7 +187,7 @@ This project is calibrated for a **job-ready developer** (confirmed junior / end
 ## Project structure
 
 ```text
-app.py                # Flask application (factory)
+app.py                # APIFlask application (factory, OpenAPI docs at /docs)
 main.py               # Entry point
 config.py             # Configuration (FT_DATA_DIR)
 routes.py             # Web routes (Blueprint "main")
@@ -214,6 +215,9 @@ templates/            # Jinja2 templates
 static/               # CSS (custom design system)
 tests/                # pytest test suite
 doc/                  # Technical documentation
+mcp/                  # MCP Server (TypeScript, streamable HTTP)
+  src/                # Tools, resources, HTTP client
+  package.json        # Node.js dependencies
 Dockerfile            # Multi-stage build (uv + WeasyPrint runtime)
 docker-compose.yml    # Prod, dev (hot-reload), Ollama profiles
 ```
