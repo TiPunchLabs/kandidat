@@ -91,17 +91,16 @@ Open <http://localhost:8000> in a browser.
 ## Docker
 
 ```bash
-# Production (gunicorn)
-docker compose --profile prod up -d
-
-# Production + Ollama local
-docker compose --profile prod --profile ollama up -d
-
-# Development (hot-reload)
+# Development (hot-reload + local PostgreSQL)
 docker compose --profile dev up
+
+# Development + Ollama local
+docker compose --profile dev --profile ollama up
 ```
 
-Data is persisted in a `kandidat-data` Docker volume mounted at `/app/data` (SQLite database + uploaded files).
+Data is persisted in a `kandidat-data` Docker volume mounted at `/app/data`.
+
+Production is deployed on dockhost via the CI/CD pipeline (GitLab CI → bastion runner → Ansible playbook). See [doc/deployment.md](doc/deployment.md) for the full deployment architecture.
 
 ## MCP Server (LLM agent integration)
 
