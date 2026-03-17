@@ -39,11 +39,41 @@ The deliberately simple stack (APIFlask, SQLite, Jinja2, vanilla CSS) is intenti
 
 ## Screenshots
 
-### Dashboard
-
-Filterable and sortable table with KPI cards, status/type/priority/category filters.
+<details>
+<summary>Dashboard — light theme</summary>
 
 ![Dashboard](doc/screenshots/dashboard.png)
+</details>
+
+<details>
+<summary>Dashboard — dark theme</summary>
+
+![Dashboard dark](doc/screenshots/dashboard-dark.png)
+</details>
+
+<details>
+<summary>Application detail</summary>
+
+![Detail](doc/screenshots/detail.png)
+</details>
+
+<details>
+<summary>Target companies</summary>
+
+![Cibles](doc/screenshots/cibles.png)
+</details>
+
+<details>
+<summary>Company detail</summary>
+
+![Cible detail](doc/screenshots/cible-detail.png)
+</details>
+
+<details>
+<summary>Statistics</summary>
+
+![Stats](doc/screenshots/stats.png)
+</details>
 
 ## Prerequisites
 
