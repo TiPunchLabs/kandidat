@@ -35,6 +35,10 @@ gitlab-terraform/*.tfvars
 
 # Claude Code
 CLAUDE.md
+.mcp.json
+
+# Temp
+tmp/
 
 # Data directories
 data/
