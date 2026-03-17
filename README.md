@@ -116,19 +116,32 @@ KANDIDAT_API_URL=http://localhost:8000 pnpm dev
 
 # Or pointing to production (dockhost)
 KANDIDAT_API_URL=http://kandidat.local:8000 pnpm dev
+
+# Custom port (default: 3001)
+MCP_PORT=3002 KANDIDAT_API_URL=http://localhost:8000 pnpm dev
 ```
 
-Then configure Claude Desktop or Claude Code to connect:
+| Variable | Default | Description |
+| --- | --- | --- |
+| `KANDIDAT_API_URL` | `http://localhost:8000` | kandidat REST API base URL |
+| `MCP_PORT` | `3001` | MCP server listen port |
+
+### Client configuration
+
+**Claude Code** — a `.mcp.json` file at the project root is included:
 
 ```json
 {
   "mcpServers": {
     "kandidat": {
+      "type": "http",
       "url": "http://127.0.0.1:3001/mcp"
     }
   }
 }
 ```
+
+**Claude Desktop** — add the same block to your `claude_desktop_config.json`.
 
 See [doc/mcp-architecture-proposal.md](doc/mcp-architecture-proposal.md) for the full architecture design.
 
