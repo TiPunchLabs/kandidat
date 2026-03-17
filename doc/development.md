@@ -42,7 +42,7 @@ uv sync
 ## Code structure
 
 ```text
-app.py              Flask application factory
+app.py              APIFlask application factory (OpenAPI docs at /docs)
 main.py             Entry point (python main.py)
 config.py           Configuration (FT_DATA_DIR)
 routes.py           Web routes (Blueprint "main")

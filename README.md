@@ -14,7 +14,7 @@ kandidat lets you centralize your applications, track their progress through a c
 
 Existing job application trackers are either too heavy (repurposed CRMs), too limited (spreadsheets), or hosted by a third party (personal data). kandidat was born from a concrete need: a clean web interface that runs locally, with data stored as a SQLite file you can back up, version, or migrate however you want.
 
-The deliberately simple stack (Flask, SQLite, Jinja2, vanilla CSS) is intentional: the code stays readable, modifiable, and extensible without needing to learn a frontend framework or deployment infrastructure.
+The deliberately simple stack (APIFlask, SQLite, Jinja2, vanilla CSS) is intentional: the code stays readable, modifiable, and extensible without needing to learn a frontend framework or deployment infrastructure.
 
 ## Features
 
@@ -28,8 +28,9 @@ The deliberately simple stack (Flask, SQLite, Jinja2, vanilla CSS) is intentiona
 - **Statistics**: breakdown by status, type, priority, category, and chronological timeline
 - **Full-text search**: search across application content and markdown files
 - **Obsidian dashboard**: regenerate an Obsidian-compatible `00-Dashboard.md` with wikilinks
-- **Themes**: 4 visual themes (Precision, Vibrant, Dark, Pastel) switchable on the fly
-- **REST API**: complete JSON endpoints for all resources (applications, companies, contacts, files, history, stats)
+- **Themes**: 4 visual themes (Precision, Dim, Dark, Pastel) switchable on the fly
+- **REST API**: complete JSON endpoints for all resources (applications, companies, contacts, files, history, stats), with auto-generated OpenAPI documentation (Swagger UI at `/docs`)
+- **Help page**: in-app help page with keyboard shortcuts and feature reference
 - **CV adaptation via LLM**: automatically adapt a reference CV to a job application context using a configurable LLM (Ollama local or Claude API), with HTML preview before saving
 - **PDF & DOCX export**: convert adapted CV to PDF (WeasyPrint with print-safe CSS, A4 layout) and DOCX (semantic HTML parsing, ATS-optimized structure)
 - **AI-powered company enrichment**: automatically enrich target company information via web search (Tavily) + LLM structured extraction — finds website, LinkedIn, description, contacts with review before applying
@@ -151,7 +152,7 @@ This project is calibrated for a **job-ready developer** (confirmed junior / end
 | Area | Level | Detail |
 | --- | --- | --- |
 | **Overall** | Intermediate | Classic MVC architecture, no black magic |
-| **Backend** | Intermediate | Flask + SQLAlchemy + Pydantic — standard patterns, nothing exotic |
+| **Backend** | Intermediate | APIFlask + SQLAlchemy + Pydantic — standard patterns, nothing exotic |
 | **Frontend** | Easy to intermediate | Jinja2 templates, vanilla CSS with variables, vanilla JS without frameworks |
 | **Database** | Easy | SQLite, simple relational models (FK, cascade), manual migrations |
 | **REST API** | Intermediate | Full CRUD, Pydantic validation, proper HTTP status codes |
@@ -174,11 +175,11 @@ This project is calibrated for a **job-ready developer** (confirmed junior / end
 - External API integration (Tavily web search for company enrichment)
 - Document conversion (HTML to PDF via WeasyPrint, HTML to DOCX via BeautifulSoup + python-docx)
 - Containerization (Docker multi-stage build, Compose profiles, gunicorn)
+- Auto-generated API documentation (APIFlask + Swagger UI)
 
 ### Not covered
 
 - Authentication / authorization
-- Client-server databases (PostgreSQL, MySQL)
 - SPA frontend (React, Vue)
 
 > A solid exercise to consolidate Python web fundamentals before moving to more complex stacks.
@@ -186,7 +187,7 @@ This project is calibrated for a **job-ready developer** (confirmed junior / end
 ## Project structure
 
 ```text
-app.py                # Flask application (factory)
+app.py                # APIFlask application (factory, OpenAPI docs at /docs)
 main.py               # Entry point
 config.py             # Configuration (FT_DATA_DIR)
 routes.py             # Web routes (Blueprint "main")

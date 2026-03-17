@@ -15,8 +15,8 @@
                     │                                            │
                     ▼                                            ▼
                     ┌─────────────────────────────────────────────┐
-                    │              Flask Application               │
-                    │                 (app.py)                     │
+                    │           APIFlask Application                │
+                    │          (app.py, docs at /docs)             │
                     ├──────────────────┬──────────────────────────┤
                     │                  │                          │
                routes.py          api/                    templates/
@@ -95,7 +95,7 @@ brouillon ──► envoyee ──► relancee ──► entretien ──► acc
 
 | Blueprint | Prefix | Role |
 | --- | --- | --- |
-| `main` | `/` | HTML pages (dashboard, detail, create, stats, cibles, company detail, search, settings, CV preview/loading, enrichment loading/preview) |
+| `main` | `/` | HTML pages (dashboard, detail, create, stats, cibles, company detail, search, settings, help, about, CV preview/loading, enrichment loading/preview) |
 | `api` | `/api` | JSON endpoints (CRUD applications, companies, contacts, files, stats, search, settings, CV adapt/convert/save, enrichment) |
 
 ## CV adaptation flow

@@ -1,6 +1,6 @@
 /* ============================================================
    kandidat — Theme System
-   4 themes: Precision (default) | Vibrant | Dark | Pastel
+   4 themes: Precision (default) | Dim | Dark | Pastel
    Loaded before style.css — provides all CSS custom properties
    ============================================================ */
 
@@ -120,92 +120,100 @@
 }
 
 
-/* --- Vibrant — Indigo #6C5CE7 --- */
-[data-theme="vibrant"] {
-  --bg: #F7F7FB;
-  --bg-surface: #FFFFFF;
-  --bg-subtle: #EEEDF5;
-  --bg-sidebar: #F9F8FD;
+/* --- Dim — GitHub Dark Dimmed + Slate Blue #539BF5 --- */
+[data-theme="dim"] {
+  --bg: #22272E;
+  --bg-surface: #2D333B;
+  --bg-subtle: #373E47;
+  --bg-sidebar: #1C2128;
 
-  --text: #12102A;
-  --text-secondary: #5A5678;
-  --text-tertiary: #7B7894;
+  --text: #ADBAC7;
+  --text-secondary: #768390;
+  --text-tertiary: #636E7B;
   --text-on-accent: #fff;
 
-  --accent: #6C5CE7;
-  --accent-hover: #5A4BD6;
-  --accent-bg: rgba(108, 92, 231, 0.06);
+  /* Bootstrap variable overrides for dim mode */
+  --bs-body-color: #ADBAC7;
+  --bs-body-bg: #22272E;
+  --bs-emphasis-color: #ADBAC7;
+  --bs-secondary-color: #768390;
+  --bs-heading-color: #ADBAC7;
+  --bs-border-color: #444C56;
 
-  --border: #E0DEE8;
-  --border-hover: #C8C6D4;
+  --accent: #539BF5;
+  --accent-hover: #4184E4;
+  --accent-bg: rgba(83, 155, 245, 0.10);
 
-  --status-brouillon: #94A3B8;
-  --status-envoyee: #4F8BF9;
-  --status-relancee: #E08A00;
-  --status-entretien: #22C55E;
-  --status-acceptee: #10B981;
-  --status-refusee: #EF4444;
-  --status-sans-reponse: #64748B;
-  --status-archivee: #9CA3AF;
+  --border: #444C56;
+  --border-hover: #545D68;
 
-  --status-brouillon-bg: rgba(148, 163, 184, 0.12);
-  --status-envoyee-bg: rgba(79, 139, 249, 0.10);
-  --status-relancee-bg: rgba(224, 138, 0, 0.10);
-  --status-entretien-bg: rgba(34, 197, 94, 0.10);
-  --status-acceptee-bg: rgba(16, 185, 129, 0.10);
-  --status-refusee-bg: rgba(239, 68, 68, 0.10);
-  --status-sans-reponse-bg: rgba(100, 116, 139, 0.10);
-  --status-archivee-bg: rgba(156, 163, 175, 0.10);
+  --status-brouillon: #8B949E;
+  --status-envoyee: #6CB6FF;
+  --status-relancee: #DAAA3F;
+  --status-entretien: #57AB5A;
+  --status-acceptee: #46954A;
+  --status-refusee: #E5534B;
+  --status-sans-reponse: #636E7B;
+  --status-archivee: #636E7B;
 
-  --priority-haute: #EF4444;
-  --priority-moyenne: #E08A00;
-  --priority-basse: #94A3B8;
+  --status-brouillon-bg: rgba(139, 148, 158, 0.14);
+  --status-envoyee-bg: rgba(108, 182, 255, 0.14);
+  --status-relancee-bg: rgba(218, 170, 63, 0.14);
+  --status-entretien-bg: rgba(87, 171, 90, 0.14);
+  --status-acceptee-bg: rgba(70, 149, 74, 0.14);
+  --status-refusee-bg: rgba(229, 83, 75, 0.14);
+  --status-sans-reponse-bg: rgba(99, 110, 123, 0.14);
+  --status-archivee-bg: rgba(99, 110, 123, 0.12);
 
-  --cat-entreprise: #4F8BF9;
-  --cat-entreprise-bg: rgba(79, 139, 249, 0.10);
-  --cat-esn: #A855F7;
-  --cat-esn-bg: rgba(168, 85, 247, 0.10);
-  --cat-cabinet: #E08A00;
-  --cat-cabinet-bg: rgba(224, 138, 0, 0.10);
-  --cat-groupe: #10B981;
-  --cat-groupe-bg: rgba(16, 185, 129, 0.10);
-  --cat-organisation: #EF4444;
-  --cat-organisation-bg: rgba(239, 68, 68, 0.10);
+  --priority-haute: #E5534B;
+  --priority-moyenne: #DAAA3F;
+  --priority-basse: #636E7B;
 
-  --alert-success-bg: rgba(34, 197, 94, 0.08);
-  --alert-success-text: #16A34A;
-  --alert-danger-bg: rgba(239, 68, 68, 0.08);
-  --alert-danger-text: #EF4444;
-  --alert-warning-bg: rgba(224, 138, 0, 0.08);
-  --alert-warning-text: #D97706;
-  --alert-info-bg: rgba(108, 92, 231, 0.08);
-  --alert-info-text: #6C5CE7;
+  --cat-entreprise: #6CB6FF;
+  --cat-entreprise-bg: rgba(108, 182, 255, 0.14);
+  --cat-esn: #B083F0;
+  --cat-esn-bg: rgba(176, 131, 240, 0.14);
+  --cat-cabinet: #DAAA3F;
+  --cat-cabinet-bg: rgba(218, 170, 63, 0.14);
+  --cat-groupe: #46954A;
+  --cat-groupe-bg: rgba(70, 149, 74, 0.14);
+  --cat-organisation: #E5534B;
+  --cat-organisation-bg: rgba(229, 83, 75, 0.14);
 
-  --danger: #EF4444;
-  --danger-hover: #DC2626;
-  --danger-bg: rgba(239, 68, 68, 0.06);
-  --danger-bg-subtle: rgba(239, 68, 68, 0.08);
-  --danger-border: rgba(239, 68, 68, 0.3);
-  --warning: #E08A00;
-  --warning-hover: #C07800;
-  --warning-bg-subtle: rgba(224, 138, 0, 0.08);
+  --alert-success-bg: rgba(87, 171, 90, 0.12);
+  --alert-success-text: #57AB5A;
+  --alert-danger-bg: rgba(229, 83, 75, 0.12);
+  --alert-danger-text: #E5534B;
+  --alert-warning-bg: rgba(218, 170, 63, 0.12);
+  --alert-warning-text: #DAAA3F;
+  --alert-info-bg: rgba(83, 155, 245, 0.12);
+  --alert-info-text: #539BF5;
 
-  --focus-ring: 0 0 0 2px rgba(108, 92, 231, 0.15);
-  --selection-bg: rgba(108, 92, 231, 0.15);
-  --highlight-bg: rgba(108, 92, 231, 0.15);
+  --danger: #E5534B;
+  --danger-hover: #D03E35;
+  --danger-bg: rgba(229, 83, 75, 0.10);
+  --danger-bg-subtle: rgba(229, 83, 75, 0.12);
+  --danger-border: rgba(229, 83, 75, 0.4);
+  --warning: #DAAA3F;
+  --warning-hover: #C09525;
+  --warning-bg-subtle: rgba(218, 170, 63, 0.12);
 
-  --overlay-bg: rgba(18, 16, 42, 0.35);
-  --shadow-modal: 0 4px 16px rgba(18, 16, 42, 0.08), 0 8px 32px rgba(18, 16, 42, 0.12);
+  --focus-ring: 0 0 0 2px rgba(83, 155, 245, 0.25);
+  --selection-bg: rgba(83, 155, 245, 0.20);
+  --highlight-bg: rgba(83, 155, 245, 0.20);
 
-  --code-block-bg: #1E1B3A;
-  --code-block-text: #E0DEF0;
+  --overlay-bg: rgba(0, 0, 0, 0.45);
+  --shadow-modal: 0 4px 16px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.3);
+
+  --code-block-bg: #1C2128;
+  --code-block-text: #ADBAC7;
 
   --radius: 6px;
   --radius-lg: 8px;
 
-  --shadow-sm: 0 1px 2px rgba(18, 16, 42, 0.04);
-  --shadow-md: 0 2px 8px rgba(18, 16, 42, 0.06);
-  --shadow-lg: 0 4px 16px rgba(18, 16, 42, 0.08);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.22);
 }
 
 
@@ -220,6 +228,14 @@
   --text-secondary: #8B949E;
   --text-tertiary: #6E7681;
   --text-on-accent: #fff;
+
+  /* Bootstrap variable overrides for dark mode */
+  --bs-body-color: #E6EDF3;
+  --bs-body-bg: #0D1117;
+  --bs-emphasis-color: #E6EDF3;
+  --bs-secondary-color: #8B949E;
+  --bs-heading-color: #E6EDF3;
+  --bs-border-color: #30363D;
 
   --accent: #F0883E;
   --accent-hover: #E5793A;
@@ -387,26 +403,37 @@
 }
 
 
-/* --- Dark theme: Bootstrap overrides --- */
+/* --- Dim + Dark themes: Bootstrap overrides --- */
+[data-theme="dim"] .form-control,
+[data-theme="dim"] .form-select,
 [data-theme="dark"] .form-control,
 [data-theme="dark"] .form-select {
   background-color: var(--bg-subtle);
   color: var(--text);
   border-color: var(--border);
 }
+[data-theme="dim"] .form-control::placeholder,
 [data-theme="dark"] .form-control::placeholder {
   color: var(--text-tertiary);
 }
+[data-theme="dim"] .form-select,
 [data-theme="dark"] .form-select {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%238B949E' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
 }
+[data-theme="dim"] .btn-close,
 [data-theme="dark"] .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
 }
+[data-theme="dim"] .form-control:focus,
+[data-theme="dim"] .form-select:focus,
 [data-theme="dark"] .form-control:focus,
 [data-theme="dark"] .form-select:focus {
   background-color: var(--bg-subtle);
   color: var(--text);
+}
+[data-theme="dim"] .text-muted,
+[data-theme="dark"] .text-muted {
+  color: var(--text-secondary) !important;
 }
 
 
@@ -421,6 +448,12 @@
     --text-secondary: #8B949E;
     --text-tertiary: #6E7681;
     --text-on-accent: #fff;
+    --bs-body-color: #E6EDF3;
+    --bs-body-bg: #0D1117;
+    --bs-emphasis-color: #E6EDF3;
+    --bs-secondary-color: #8B949E;
+    --bs-heading-color: #E6EDF3;
+    --bs-border-color: #30363D;
     --accent: #F0883E;
     --accent-hover: #E5793A;
     --accent-bg: rgba(240, 136, 62, 0.10);
@@ -484,11 +517,14 @@
     --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.25);
     --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.3);
   }
+  .text-muted {
+    color: var(--text-secondary) !important;
+  }
 }
 
 
 /* --- Theme switcher swatch colors (hardcoded, independent of active theme) --- */
 .theme-swatch--precision { background: #E8590C; }
-.theme-swatch--vibrant { background: #6C5CE7; }
+.theme-swatch--dim { background: #2D333B; box-shadow: inset 0 0 0 2px rgba(83, 155, 245, 0.4); }
 .theme-swatch--dark { background: #0D1117; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2); }
 .theme-swatch--pastel { background: #C07254; }

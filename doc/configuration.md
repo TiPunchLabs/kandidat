@@ -8,6 +8,7 @@
 | `KANDIDAT_ENV` | Environment selector (`dev` or `prod`). Sets data directory to `data/{env}/` | `prod` |
 | `FT_DATA_DIR` | Explicit data directory override (takes priority over `KANDIDAT_ENV`) | `data/{KANDIDAT_ENV}/` |
 | `SECRET_KEY` | Flask secret key for session signing | `kandidat-dev-key` |
+| `PORT` | Server listen port | `8000` |
 | `FLASK_DEBUG` | Enable Flask debug mode (`1` = on, `0` = off) | `1` |
 
 ## Data directory structure
@@ -55,6 +56,8 @@ pass insert kandidat/secret-key
 If `pass` is not configured, the fallback dev key is used automatically.
 
 ## Flask configuration
+
+The application uses [APIFlask](https://apiflask.com/) (a Flask extension) which auto-generates OpenAPI documentation available at `/docs` (Swagger UI) and `/openapi.json` (raw spec).
 
 Set in `app.py` via `create_app()`:
 

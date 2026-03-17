@@ -567,6 +567,7 @@ html.theme-transitioning *::after {
   padding: 0.65rem 0.85rem;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+  color: var(--text-secondary);
 }
 .table-modern tbody td a {
   font-weight: 600;
@@ -1901,7 +1902,7 @@ dialog.comment-modal::backdrop {
 
 /* --- CV Preview page --- */
 .cv-preview-content {
-  background: white;
+  background: var(--bg-surface);
   padding: 2rem;
   border-radius: 8px;
   max-width: 100%;
@@ -1928,7 +1929,7 @@ dialog.comment-modal::backdrop {
   background: rgba(0, 0, 0, 0.5);
 }
 .cv-modal {
-  background: white;
+  background: var(--bg-surface);
   border-radius: 12px;
   width: 100%;
   max-width: 900px;
@@ -2259,6 +2260,45 @@ dialog.comment-modal::backdrop {
   border-top: 1px solid var(--border);
   font-size: 0.78rem;
   color: var(--text-tertiary);
+}
+
+/* --- Help page --- */
+.help-steps {
+  padding-left: 1.2rem;
+  margin: 0;
+  font-size: 0.84rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.help-steps li {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.help-steps li strong {
+  color: var(--text);
+}
+.help-text {
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+.help-subtitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0.75rem 0 0.35rem;
+}
+.help-status-flow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  line-height: 1.7;
+  overflow-x: auto;
 }
 
 /* --- Reduced motion --- */

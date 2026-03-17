@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Aide — kandidat{% endblock %}
+
+{% block content %}
+<div class="about-page">
+  <div class="about-header">
+    <div class="about-logo">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+      </svg>
+    </div>
+    <div>
+      <h1 class="about-title">Aide</h1>
+      <span class="about-version">Guide d'utilisation</span>
+    </div>
+  </div>
+
+  <p class="about-description">
+    kandidat est une interface web personnelle pour suivre et gerer vos candidatures.
+    Voici comment utiliser chaque fonctionnalite.
+  </p>
+
+  <div class="about-sections">
+
+    <!-- Getting started -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/>
+        </svg>
+        Demarrage rapide
+      </h2>
+      <ol class="help-steps">
+        <li><strong>Creer une cible</strong> — Allez dans <em>Cibles</em> et ajoutez une entreprise (nom, categorie, site web).</li>
+        <li><strong>Creer une candidature</strong> — Cliquez sur <em>Nouvelle</em>, selectionnez l'entreprise cible, renseignez le poste et joignez vos fichiers (CV, LM, offre).</li>
+        <li><strong>Suivre l'avancement</strong> — Depuis la fiche candidature, changez le statut au fur et a mesure (envoyee, relancee, entretien...).</li>
+        <li><strong>Consulter le dashboard</strong> — La page d'accueil affiche un tableau de toutes vos candidatures, filtrable et triable.</li>
+      </ol>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+        Dashboard
+      </h2>
+      <p class="help-text">Page d'accueil avec une vue d'ensemble de toutes vos candidatures.</p>
+      <ul class="about-features">
+        <li>Barre de KPI en haut : total, envoyees, entretiens, relances</li>
+        <li>Tableau filtrable par statut, type, priorite, categorie</li>
+        <li>Tri par colonne (cliquez sur les en-tetes)</li>
+        <li>Cliquez sur une ligne pour ouvrir la fiche candidature</li>
+        <li>Bouton <em>Regenerer</em> pour exporter vers Obsidian (fichier 00-Dashboard.md)</li>
+      </ul>
+    </div>
+
+    <!-- Candidatures -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        Candidatures
+      </h2>
+      <p class="help-text">Chaque candidature est rattachee a une entreprise cible.</p>
+      <table class="about-table">
+        <tr><td>Creer</td><td>Menu <em>Nouvelle</em> — remplissez entreprise, poste, type, priorite et selectionnez une cible</td></tr>
+        <tr><td>Fichiers</td><td>Depuis la fiche, uploadez CV, lettre de motivation, offre d'emploi ou tout autre document</td></tr>
+        <tr><td>Changer le statut</td><td>Panneau lateral droit — selectionnez le nouveau statut (avec commentaire optionnel)</td></tr>
+        <tr><td>Archiver</td><td>Bouton en bas de la fiche — archive la candidature (irreversible)</td></tr>
+        <tr><td>Supprimer</td><td>Bouton en bas de la fiche — supprime definitivement la candidature</td></tr>
+      </table>
+    </div>
+
+    <!-- Status state machine -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Cycle de vie des statuts
+      </h2>
+      <p class="help-text">Les transitions de statut suivent des regles precises. Seuls certains enchainements sont autorises :</p>
+      <div class="help-status-flow">
+        <code>brouillon → envoyee → relancee → entretien → acceptee → archivee</code><br>
+        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ refusee → archivee</code><br>
+        <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;→ sans-reponse → archivee</code>
+      </div>
+    </div>
+
+    <!-- Cibles -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+        </svg>
+        Cibles (entreprises)
+      </h2>
+      <p class="help-text">Les cibles sont les entreprises que vous visez. Chaque candidature doit etre rattachee a une cible.</p>
+      <ul class="about-features">
+        <li>Ajoutez une cible avec son nom, categorie (startup, PME, groupe, autre), site web, email, LinkedIn</li>
+        <li>Cliquez sur une cible pour voir sa fiche detaillee et gerer ses contacts</li>
+        <li>Ajoutez des contacts (nom, prenom, email, telephone, LinkedIn, fonction)</li>
+        <li>Creez une candidature directement depuis la fiche cible</li>
+        <li>Une cible avec des candidatures existantes ne peut pas etre desactivee</li>
+      </ul>
+    </div>
+
+    <!-- AI features -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a4 4 0 0 0-4 4v2H6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10a2 2 0 0 0-2-2h-2V6a4 4 0 0 0-4-4z"/>
+        </svg>
+        Fonctionnalites IA (optionnelles)
+      </h2>
+      <p class="help-text">Ces fonctionnalites necessitent une configuration prealable dans <em>Parametres</em>.</p>
+
+      <h3 class="help-subtitle">Adaptation de CV</h3>
+      <ul class="about-features">
+        <li>Prerequis : uploader un CV de reference (HTML) dans les parametres + configurer un fournisseur LLM</li>
+        <li>Depuis la fiche candidature, cliquez sur <em>Adapter mon CV</em></li>
+        <li>Le LLM adapte votre CV au poste et a l'entreprise</li>
+        <li>Previsualisation dans un iframe — confirmez pour sauvegarder en PDF et DOCX</li>
+      </ul>
+
+      <h3 class="help-subtitle">Enrichissement de cible</h3>
+      <ul class="about-features">
+        <li>Prerequis : configurer une cle API Tavily + un fournisseur LLM dans les parametres</li>
+        <li>Depuis la fiche cible, cliquez sur <em>Enrichir via IA</em></li>
+        <li>Recherche web automatique (Tavily) + extraction structuree (LLM)</li>
+        <li>Preview avec cases a cocher pour selectionner les infos et contacts a importer</li>
+      </ul>
+    </div>
+
+    <!-- Settings -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        Parametres
+      </h2>
+      <table class="about-table">
+        <tr><td>CV de reference</td><td>Uploadez votre CV au format HTML — il servira de base pour l'adaptation IA</td></tr>
+        <tr><td>Fournisseur LLM</td><td>Choisissez entre Ollama (local) ou Claude (API distante) — bouton de test de connectivite inclus</td></tr>
+        <tr><td>Prompts personnalises</td><td>Modifiez les prompts systeme et utilisateur pour l'adaptation CV (bouton reset vers les valeurs par defaut)</td></tr>
+        <tr><td>Tavily</td><td>Renseignez votre cle API Tavily pour activer l'enrichissement de cibles</td></tr>
+      </table>
+    </div>
+
+    <!-- Search & Stats -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Recherche et statistiques
+      </h2>
+      <ul class="about-features">
+        <li><strong>Recherche</strong> — recherche plein texte dans les noms d'entreprise, postes et contenus. Accessible via le menu ou le raccourci <kbd>/</kbd></li>
+        <li><strong>Statistiques</strong> — graphiques de repartition par statut, type, priorite et categorie. Timeline chronologique de vos candidatures</li>
+      </ul>
+    </div>
+
+    <!-- Themes -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="13.5" cy="6.5" r="2.5"/><circle cx="19" cy="13" r="2.5"/><circle cx="15.5" cy="19.5" r="2.5"/><circle cx="8.5" cy="19.5" r="2.5"/><circle cx="5" cy="13" r="2.5"/><circle cx="6.5" cy="6.5" r="2.5"/>
+        </svg>
+        Themes
+      </h2>
+      <p class="help-text">4 themes disponibles, selectionnables en bas de la barre laterale :</p>
+      <table class="about-table">
+        <tr><td>Precision</td><td>Theme par defaut, tons neutres et sobres</td></tr>
+        <tr><td>Dim</td><td>Mode semi-sombre, confortable pour les yeux</td></tr>
+        <tr><td>Dark</td><td>Mode sombre complet</td></tr>
+        <tr><td>Pastel</td><td>Couleurs douces et pastels</td></tr>
+      </table>
+    </div>
+
+    <!-- Keyboard shortcuts -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+        </svg>
+        Raccourcis clavier
+      </h2>
+      <table class="about-table">
+        <tr><td><kbd>/</kbd></td><td>Aller a la page de recherche</td></tr>
+        <tr><td><kbd>Echap</kbd></td><td>Fermer les modales de confirmation</td></tr>
+      </table>
+    </div>
+
+    <!-- MCP -->
+    <div class="about-section">
+      <h2 class="about-section-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="16" height="16" rx="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/>
+        </svg>
+        API et MCP
+      </h2>
+      <p class="help-text">kandidat expose une API REST complete (<code>/api/</code>) et un serveur MCP (port 3001) pour l'integration avec des agents LLM.</p>
+      <ul class="about-features">
+        <li>API REST : CRUD candidatures, cibles, contacts, recherche, statistiques</li>
+        <li>Serveur MCP : 22 outils accessibles par les agents IA (Claude Desktop, Claude Code...)</li>
+        <li>Configuration MCP : <code>{"url": "http://127.0.0.1:3001/mcp"}</code></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

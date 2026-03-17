@@ -7,6 +7,7 @@ from services.settings import get_all_settings, get_cv_reference_html, get_setti
 
 
 @api_bp.route("/settings", methods=["GET"])
+@api_bp.doc(tags=["Settings"], summary="Get all application settings")
 def get_settings():
     """GET /api/settings — Get all application settings (sensitive values masked)."""
     all_settings = get_all_settings()
@@ -25,6 +26,7 @@ def get_settings():
 
 
 @api_bp.route("/settings/cv-reference", methods=["PUT"])
+@api_bp.doc(tags=["Settings"], summary="Upload or replace CV reference HTML")
 def upload_cv_reference():
     """PUT /api/settings/cv-reference — Upload or replace the global CV reference HTML."""
     from services.settings import upload_cv_reference as do_upload
@@ -59,6 +61,7 @@ def upload_cv_reference():
 
 
 @api_bp.route("/settings/cv-reference", methods=["GET"])
+@api_bp.doc(tags=["Settings"], summary="Get CV reference HTML content")
 def get_cv_reference():
     """GET /api/settings/cv-reference — Get the global CV reference HTML content."""
     cv_html = get_cv_reference_html()
@@ -76,6 +79,7 @@ def get_cv_reference():
 
 
 @api_bp.route("/settings/llm", methods=["PUT"])
+@api_bp.doc(tags=["Settings"], summary="Update LLM provider configuration")
 def update_llm_config():
     """PUT /api/settings/llm — Update LLM provider configuration."""
     from services.schemas import LLMConfigUpdate
@@ -110,6 +114,7 @@ def update_llm_config():
 
 
 @api_bp.route("/settings/llm/health", methods=["POST"])
+@api_bp.doc(tags=["Settings"], summary="Test LLM provider connectivity")
 def llm_health_check():
     """POST /api/settings/llm/health — Test connectivity to the configured LLM provider."""
     from services.llm import get_provider
@@ -128,6 +133,7 @@ def llm_health_check():
 
 
 @api_bp.route("/settings/llm/models", methods=["GET"])
+@api_bp.doc(tags=["Settings"], summary="List available Ollama models")
 def list_ollama_models():
     """GET /api/settings/llm/models — List available models from Ollama server."""
     import httpx
@@ -149,6 +155,7 @@ def list_ollama_models():
 
 
 @api_bp.route("/settings/cv-reference/convert", methods=["POST"])
+@api_bp.doc(tags=["Settings"], summary="Convert CV reference to PDF + DOCX")
 def convert_cv_reference():
     """POST /api/settings/cv-reference/convert — Convert global CV to PDF + DOCX."""
     from services.cv_converter import html_to_docx, html_to_pdf
@@ -179,6 +186,7 @@ def convert_cv_reference():
 
 
 @api_bp.route("/settings/tavily", methods=["PUT"])
+@api_bp.doc(tags=["Settings"], summary="Save Tavily API key")
 def update_tavily_config():
     """PUT /api/settings/tavily — Save Tavily API key."""
     data = request.get_json()
@@ -193,6 +201,7 @@ def update_tavily_config():
 
 
 @api_bp.route("/settings/tavily/health", methods=["POST"])
+@api_bp.doc(tags=["Settings"], summary="Test Tavily API connectivity")
 def tavily_health_check():
     """POST /api/settings/tavily/health — Test Tavily API connectivity."""
     from services.cible_enricher import test_tavily_connection

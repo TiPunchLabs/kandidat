@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_bp.route("/candidatures", methods=["GET"])
+@api_bp.doc(tags=["Candidatures"], summary="List candidatures")
 def api_list_candidatures():
     """List candidatures with optional filters: statut, type, priorite, categorie."""
     try:
@@ -63,6 +64,7 @@ def api_list_candidatures():
 
 
 @api_bp.route("/candidatures/<slug>", methods=["GET"])
+@api_bp.doc(tags=["Candidatures"], summary="Get candidature by slug")
 def api_get_candidature(slug):
     """Get a single candidature by slug, including associated files."""
     try:
@@ -76,6 +78,7 @@ def api_get_candidature(slug):
 
 
 @api_bp.route("/candidatures", methods=["POST"])
+@api_bp.doc(tags=["Candidatures"], summary="Create a new candidature")
 def api_create_candidature():
     """Create a new candidature from JSON body."""
     try:
@@ -96,6 +99,7 @@ def api_create_candidature():
 
 
 @api_bp.route("/candidatures/<slug>", methods=["PUT"])
+@api_bp.doc(tags=["Candidatures"], summary="Update a candidature")
 def api_update_candidature(slug):
     """Partial update of a candidature."""
     try:
@@ -143,6 +147,7 @@ def api_update_candidature(slug):
 
 
 @api_bp.route("/candidatures/<slug>", methods=["DELETE"])
+@api_bp.doc(tags=["Candidatures"], summary="Delete a candidature")
 def api_delete_candidature(slug):
     """Delete a candidature (DB + files on disk)."""
     try:
@@ -164,6 +169,7 @@ def api_delete_candidature(slug):
 
 
 @api_bp.route("/candidatures/<slug>/historique", methods=["GET"])
+@api_bp.doc(tags=["Candidatures"], summary="Get status history for a candidature")
 def api_get_historique(slug):
     """Get status history for a candidature."""
     try:
@@ -180,6 +186,7 @@ def api_get_historique(slug):
 
 
 @api_bp.route("/candidatures/<slug>/historique/<int:historique_id>", methods=["PATCH"])
+@api_bp.doc(tags=["Candidatures"], summary="Update a historique entry comment")
 def api_patch_historique(slug, historique_id):
     """Update the commentaire of an existing historique entry."""
     try:
@@ -231,6 +238,7 @@ def api_patch_historique(slug, historique_id):
 
 
 @api_bp.route("/candidatures/<slug>/fichiers", methods=["POST"])
+@api_bp.doc(tags=["Fichiers"], summary="Upload a file for a candidature")
 def api_upload_fichier(slug):
     """Upload a file for a candidature (multipart/form-data)."""
     try:
@@ -252,6 +260,7 @@ def api_upload_fichier(slug):
 
 
 @api_bp.route("/candidatures/<slug>/fichiers/<path:filename>", methods=["DELETE"])
+@api_bp.doc(tags=["Fichiers"], summary="Delete a file from a candidature")
 def api_delete_fichier(slug, filename):
     """Delete a file from a candidature."""
     try:
@@ -270,6 +279,7 @@ def api_delete_fichier(slug, filename):
 
 
 @api_bp.route("/candidatures/<slug>/fichiers/<path:filename>/download")
+@api_bp.doc(tags=["Fichiers"], summary="Download a file from a candidature")
 def api_download_fichier(slug, filename):
     """Download a file from a candidature."""
     try:
@@ -293,6 +303,7 @@ def api_download_fichier(slug, filename):
 
 
 @api_bp.route("/candidatures/<slug>/cv/adapt", methods=["POST"])
+@api_bp.doc(tags=["CV"], summary="Adapt CV via LLM")
 def api_adapt_cv(slug):
     """POST /api/candidatures/<slug>/cv/adapt — Adapt CV via LLM, return adapted HTML."""
     try:
@@ -320,6 +331,7 @@ def api_adapt_cv(slug):
 
 
 @api_bp.route("/candidatures/<slug>/cv/save", methods=["POST"])
+@api_bp.doc(tags=["CV"], summary="Save adapted CV as PDF + DOCX")
 def api_save_cv(slug):
     """POST /api/candidatures/<slug>/cv/save — Save adapted CV as PDF + DOCX."""
     try:
@@ -344,6 +356,7 @@ def api_save_cv(slug):
 
 
 @api_bp.route("/candidatures/<slug>/cv/convert", methods=["POST"])
+@api_bp.doc(tags=["CV"], summary="Convert CV to PDF + DOCX without LLM")
 def api_convert_cv(slug):
     """POST /api/candidatures/<slug>/cv/convert — Direct HTML to PDF+DOCX, no LLM."""
     try:

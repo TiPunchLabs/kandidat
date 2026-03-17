@@ -1,6 +1,6 @@
-from flask import Blueprint
+from apiflask import APIBlueprint
 
-api_bp = Blueprint("api", __name__, url_prefix="/api")
+api_bp = APIBlueprint("api", __name__, url_prefix="/api")
 
 from . import (  # noqa: E402
     candidatures,  # noqa: F401

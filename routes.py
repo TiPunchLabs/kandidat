@@ -885,6 +885,11 @@ def cible_enrich_preview(cible_id):
 # ---------------------------------------------------------------------------
 
 
+@bp.route("/help")
+def help_page():
+    return render_template("help.html")
+
+
 @bp.route("/about")
 def about():
     import sys
