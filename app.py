@@ -1,6 +1,18 @@
 import os
+from importlib.metadata import version as pkg_version
 
 from flask import Flask, render_template
+
+
+def _get_version() -> str:
+    """Read version from package metadata (pyproject.toml)."""
+    try:
+        return pkg_version("kandidat")
+    except Exception:
+        return "dev"
+
+
+APP_VERSION = _get_version()
 
 
 def create_app() -> Flask:
@@ -27,8 +39,8 @@ def create_app() -> Flask:
     from services.cibles import CATEGORY_LABELS
 
     @app.context_processor
-    def inject_category_labels():
-        return {"category_labels": CATEGORY_LABELS}
+    def inject_globals():
+        return {"category_labels": CATEGORY_LABELS, "app_version": APP_VERSION}
 
     @app.errorhandler(404)
     def page_not_found(e):

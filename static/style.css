@@ -235,6 +235,11 @@ a:hover {
   font-size: 0.72rem;
   color: var(--text-tertiary);
   font-family: var(--font-mono);
+  text-decoration: none;
+  transition: color var(--duration);
+}
+.sidebar-version:hover {
+  color: var(--accent);
 }
 
 /* --- Theme switcher --- */
@@ -2138,6 +2143,122 @@ dialog.comment-modal::backdrop {
   .page-header h1 {
     font-size: 1.25rem;
   }
+}
+
+/* --- About page --- */
+.about-page {
+  max-width: 640px;
+}
+.about-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.about-logo {
+  flex-shrink: 0;
+}
+.about-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+.about-version {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1px 8px;
+  margin-top: 2px;
+}
+.about-description {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+.about-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.about-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, var(--radius));
+  padding: 1.25rem;
+}
+.about-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text);
+}
+.about-section-title svg {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.about-table {
+  width: 100%;
+  font-size: 0.84rem;
+  border-collapse: collapse;
+}
+.about-table td {
+  padding: 0.35rem 0;
+  border: none;
+}
+.about-table td:first-child {
+  color: var(--text-secondary);
+  width: 45%;
+}
+.about-table td:last-child {
+  font-weight: 500;
+}
+.about-table kbd {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+.about-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.84rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.about-features li {
+  padding-left: 1.2rem;
+  position: relative;
+  color: var(--text-secondary);
+}
+.about-features li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.about-footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
 }
 
 /* --- Reduced motion --- */

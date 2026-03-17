@@ -88,6 +88,12 @@
           </svg>
           Parametres
         </a>
+        <a class="sidebar-nav-item {% if request.endpoint == 'main.about' %}active{% endif %}" href="{{ url_for('main.about') }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          A propos
+        </a>
       </nav>
 
       <div class="sidebar-footer">
@@ -97,7 +103,7 @@
           <button class="theme-swatch theme-swatch--dark" data-theme="dark" role="radio" aria-checked="false" aria-label="Dark" title="Dark"></button>
           <button class="theme-swatch theme-swatch--pastel" data-theme="pastel" role="radio" aria-checked="false" aria-label="Pastel" title="Pastel"></button>
         </div>
-        <span class="sidebar-version">v0.1.0</span>
+        <a href="{{ url_for('main.about') }}" class="sidebar-version">v{{ app_version }}</a>
       </div>
     </aside>
 
