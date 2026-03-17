@@ -4,6 +4,8 @@
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Coverage](https://img.shields.io/badge/coverage-81%25-brightgreen)
 
+> **Mirror notice:** If you are reading this on GitHub, this is a read-only mirror. The source of truth is on [GitLab](https://gitlab.com/tipunchlabs/kandidat). Issues, merge requests, and CI/CD run exclusively on GitLab.
+
 A personal web interface to track and manage job applications.
 
 The idea: a simple, local tool you fully control. No account to create, no SaaS, no dependency on a third-party service. A SQLite database, a Flask server, a browser — that's it.
