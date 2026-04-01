@@ -85,6 +85,7 @@
           <th data-col="date_candidature" aria-sort="none">Date <span class="sort-arrow" aria-hidden="true"></span></th>
           <th data-col="localisation" aria-sort="none">Lieu <span class="sort-arrow" aria-hidden="true"></span></th>
           <th data-col="priorite" aria-sort="none">Priorite <span class="sort-arrow" aria-hidden="true"></span></th>
+          <th data-col="match" aria-sort="none">Match <span class="sort-arrow" aria-hidden="true"></span></th>
         </tr>
       </thead>
       <tbody>
@@ -98,6 +99,11 @@
           <td data-label="Date" data-col-hide data-sort="{{ c.date_candidature or '9999' }}" style="font-family:var(--font-mono);font-size:0.8rem">{{ c.date_candidature or '-' }}</td>
           <td data-label="Lieu" data-col-hide>{{ c.localisation or '-' }}</td>
           <td data-label="Priorite"><span class="priorite-{{ c.priorite }}">{{ c.priorite }}</span></td>
+          <td data-label="Match" data-sort="{{ c.match_score if c.match_score is not none else -1 }}">
+            {% if c.match_score is not none %}
+              <span class="badge badge-match badge-match-{{ 'low' if c.match_score < 40 else ('medium' if c.match_score < 70 else 'high') }}">{{ c.match_score | int }}%</span>
+            {% else %}-{% endif %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
