@@ -116,6 +116,8 @@ class CandidatureResponse(BaseModel):
     cible: CibleSummary | None = None
     tags: list[str]
     contenu: str
+    match_score: float | None = None
+    match_details: dict | None = None
     fichiers: list[FichierResponse] = []
 
     @classmethod
@@ -137,6 +139,13 @@ class CandidatureResponse(BaseModel):
         if obj.cible:
             cible_summary = CibleSummary(id=obj.cible.id, nom=obj.cible.nom, categorie=obj.cible.categorie)
 
+        match_details = None
+        if obj.match_details:
+            try:
+                match_details = json.loads(obj.match_details)
+            except (json.JSONDecodeError, TypeError):
+                match_details = None
+
         return cls(
             slug=obj.slug,
             entreprise=obj.entreprise,
@@ -152,6 +161,8 @@ class CandidatureResponse(BaseModel):
             cible=cible_summary,
             tags=tags,
             contenu=obj.contenu,
+            match_score=obj.match_score,
+            match_details=match_details,
             fichiers=fichiers,
         )
 
