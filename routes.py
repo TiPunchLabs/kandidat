@@ -726,6 +726,7 @@ def cv_save(slug):
 @bp.route("/settings")
 def settings_page():
     from services.cv_adapter import DEFAULT_SYSTEM_PROMPT, DEFAULT_USER_PROMPT_TEMPLATE
+    from services.match_evaluator import DEFAULT_MATCH_SYSTEM_PROMPT, DEFAULT_MATCH_USER_PROMPT_TEMPLATE
 
     all_settings = get_all_settings()
     return render_template(
@@ -742,6 +743,10 @@ def settings_page():
         user_prompt_template=all_settings.get("cv_adapt_user_prompt", ""),
         default_system_prompt=DEFAULT_SYSTEM_PROMPT,
         default_user_prompt_template=DEFAULT_USER_PROMPT_TEMPLATE,
+        match_system_prompt=all_settings.get("match_system_prompt", ""),
+        match_user_prompt=all_settings.get("match_user_prompt", ""),
+        default_match_system_prompt=DEFAULT_MATCH_SYSTEM_PROMPT,
+        default_match_user_prompt=DEFAULT_MATCH_USER_PROMPT_TEMPLATE,
     )
 
 
@@ -819,6 +824,19 @@ def update_prompts():
         set_setting("cv_adapt_user_prompt", user_prompt)
     else:
         set_setting("cv_adapt_user_prompt", "")
+
+    match_system = request.form.get("match_system_prompt", "").strip()
+    match_user = request.form.get("match_user_prompt", "").strip()
+
+    if match_system:
+        set_setting("match_system_prompt", match_system)
+    else:
+        set_setting("match_system_prompt", "")
+
+    if match_user:
+        set_setting("match_user_prompt", match_user)
+    else:
+        set_setting("match_user_prompt", "")
 
     flash("Prompts LLM mis a jour.", "success")
     if is_htmx_request():

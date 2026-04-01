@@ -168,7 +168,7 @@
   <div class="col-12">
     <div class="card animate-in">
       <div class="card-header">
-        <h5>Prompts d'adaptation LLM</h5>
+        <h5>Prompts LLM</h5>
       </div>
       <div class="card-body">
         <form method="post" action="{{ url_for('main.update_prompts') }}"
@@ -176,18 +176,43 @@
               hx-target="#flash-messages"
               hx-swap="innerHTML"
               hx-disabled-elt="find button[type='submit']">
-          <div class="mb-3">
-            <label for="system-prompt" class="form-label">System prompt</label>
-            <textarea name="system_prompt" id="system-prompt" class="form-control" rows="8"
-                      placeholder="Instructions systeme pour le LLM...">{{ system_prompt or default_system_prompt }}</textarea>
-            <small class="text-muted">Instructions donnees au LLM pour guider l'adaptation du CV.</small>
-          </div>
-          <div class="mb-3">
-            <label for="user-prompt" class="form-label">Template du prompt utilisateur</label>
-            <textarea name="user_prompt" id="user-prompt" class="form-control" rows="10"
-                      placeholder="Template du prompt utilisateur...">{{ user_prompt_template or default_user_prompt_template }}</textarea>
-            <small class="text-muted">Variables disponibles : <code>{cv_html}</code>, <code>{poste}</code>, <code>{entreprise}</code>, <code>{contenu}</code></small>
-          </div>
+
+          <details class="mb-4">
+            <summary style="cursor:pointer;font-weight:600;font-size:0.95rem;padding:0.4rem 0">Adaptation CV</summary>
+            <div class="mt-3">
+              <div class="mb-3">
+                <label for="system-prompt" class="form-label">System prompt</label>
+                <textarea name="system_prompt" id="system-prompt" class="form-control" rows="8"
+                          placeholder="Instructions systeme pour le LLM...">{{ system_prompt or default_system_prompt }}</textarea>
+                <small class="text-muted">Instructions donnees au LLM pour guider l'adaptation du CV.</small>
+              </div>
+              <div class="mb-3">
+                <label for="user-prompt" class="form-label">Template du prompt utilisateur</label>
+                <textarea name="user_prompt" id="user-prompt" class="form-control" rows="10"
+                          placeholder="Template du prompt utilisateur...">{{ user_prompt_template or default_user_prompt_template }}</textarea>
+                <small class="text-muted">Variables disponibles : <code>{cv_html}</code>, <code>{poste}</code>, <code>{entreprise}</code>, <code>{contenu}</code></small>
+              </div>
+            </div>
+          </details>
+
+          <details class="mb-4">
+            <summary style="cursor:pointer;font-weight:600;font-size:0.95rem;padding:0.4rem 0">Evaluation Match</summary>
+            <div class="mt-3">
+              <div class="mb-3">
+                <label for="match-system-prompt" class="form-label">System prompt</label>
+                <textarea name="match_system_prompt" id="match-system-prompt" class="form-control" rows="8"
+                          placeholder="Instructions systeme pour l'evaluation du match...">{{ match_system_prompt or default_match_system_prompt }}</textarea>
+                <small class="text-muted">Instructions donnees au LLM pour evaluer la correspondance CV / offre.</small>
+              </div>
+              <div class="mb-3">
+                <label for="match-user-prompt" class="form-label">Template du prompt utilisateur</label>
+                <textarea name="match_user_prompt" id="match-user-prompt" class="form-control" rows="10"
+                          placeholder="Template du prompt utilisateur...">{{ match_user_prompt or default_match_user_prompt }}</textarea>
+                <small class="text-muted">Variables disponibles : <code>{cv_html}</code>, <code>{poste}</code>, <code>{entreprise}</code>, <code>{contenu}</code></small>
+              </div>
+            </div>
+          </details>
+
           <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary btn-sm">Sauvegarder les prompts</button>
             <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetPrompts()">
@@ -336,6 +361,8 @@ document.addEventListener('keydown', function(e) {
 function resetPrompts() {
   document.getElementById('system-prompt').value = {{ default_system_prompt|tojson }};
   document.getElementById('user-prompt').value = {{ default_user_prompt_template|tojson }};
+  document.getElementById('match-system-prompt').value = {{ default_match_system_prompt|tojson }};
+  document.getElementById('match-user-prompt').value = {{ default_match_user_prompt|tojson }};
 }
 
 function testTavilyConnection() {
