@@ -31,11 +31,13 @@ class TestMatchDatabaseColumns:
 
             c = db.session.get(Candidature, "acme-corp")
             c.match_score = 82.5
-            c.match_details = json.dumps({
-                "strengths": ["DevOps experience"],
-                "weaknesses": ["No AWS"],
-                "missing": ["GCP"],
-            })
+            c.match_details = json.dumps(
+                {
+                    "strengths": ["DevOps experience"],
+                    "weaknesses": ["No AWS"],
+                    "missing": ["GCP"],
+                }
+            )
             db.session.commit()
 
             reloaded = db.session.get(Candidature, "acme-corp")
@@ -86,12 +88,14 @@ class TestMatchEvaluator:
             set_setting("llm_provider", "ollama")
 
             mock_provider = MagicMock()
-            mock_provider.complete.return_value = json.dumps({
-                "score": 82,
-                "strengths": ["Python experience", "Docker skills"],
-                "weaknesses": ["No AWS mentioned"],
-                "missing": ["Kubernetes"],
-            })
+            mock_provider.complete.return_value = json.dumps(
+                {
+                    "score": 82,
+                    "strengths": ["Python experience", "Docker skills"],
+                    "weaknesses": ["No AWS mentioned"],
+                    "missing": ["Kubernetes"],
+                }
+            )
 
             with patch("services.match_evaluator.get_provider", return_value=mock_provider):
                 from services.match_evaluator import evaluate_match
@@ -112,12 +116,14 @@ class TestMatchEvaluator:
             set_setting("llm_provider", "ollama")
 
             mock_provider = MagicMock()
-            mock_provider.complete.return_value = json.dumps({
-                "score": 65,
-                "strengths": ["Good"],
-                "weaknesses": ["Bad"],
-                "missing": ["Missing"],
-            })
+            mock_provider.complete.return_value = json.dumps(
+                {
+                    "score": 65,
+                    "strengths": ["Good"],
+                    "weaknesses": ["Bad"],
+                    "missing": ["Missing"],
+                }
+            )
 
             with patch("services.match_evaluator.get_provider", return_value=mock_provider):
                 from services.match_evaluator import evaluate_match
@@ -168,12 +174,14 @@ class TestMatchAPI:
             set_setting("llm_provider", "ollama")
 
         mock_provider = MagicMock()
-        mock_provider.complete.return_value = json.dumps({
-            "score": 78,
-            "strengths": ["Python"],
-            "weaknesses": ["No cloud"],
-            "missing": ["AWS"],
-        })
+        mock_provider.complete.return_value = json.dumps(
+            {
+                "score": 78,
+                "strengths": ["Python"],
+                "weaknesses": ["No cloud"],
+                "missing": ["AWS"],
+            }
+        )
 
         with patch("services.match_evaluator.get_provider", return_value=mock_provider):
             resp = client.post("/api/candidatures/acme-corp/match")
@@ -189,8 +197,8 @@ class TestMatchAPI:
 
     def test_post_match_no_cv(self, client, app):
         with app.app_context():
-            from services.database import db
-            from services.database import Setting
+            from services.database import Setting, db
+
             # Remove seeded CV reference
             cv_setting = db.session.get(Setting, "cv_reference_html")
             if cv_setting:
