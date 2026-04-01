@@ -9,6 +9,13 @@
     <tr><th>Date relance</th><td style="font-family:var(--font-mono);font-size:0.82rem">{{ c.date_relance or '-' }}</td></tr>
     <tr><th>Localisation</th><td>{{ c.localisation or '-' }}</td></tr>
     <tr><th>Priorite</th><td><span class="priorite-{{ c.priorite }}">{{ c.priorite }}</span></td></tr>
+    <tr><th>Match</th><td id="match-cell">
+      {% if c.match_score is not none %}
+        <span class="badge badge-match badge-match-{{ 'low' if c.match_score < 40 else ('medium' if c.match_score < 70 else 'high') }}">{{ c.match_score | int }}%</span>
+      {% else %}
+        <span style="color:var(--text-secondary);font-size:0.82rem">-</span>
+      {% endif %}
+    </td></tr>
     <tr><th>Tags</th><td>{{ c.tags | join(', ') if c.tags else '-' }}</td></tr>
   </table>
 </div>

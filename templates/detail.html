@@ -10,10 +10,10 @@
   </ol>
 </nav>
 
-<div class="row g-3">
+<div class="detail-layout">
   <!-- Main info -->
-  <div class="col-md-8">
-    <div class="card mb-3 animate-in">
+  <div class="detail-main-col">
+    <div class="card mb-3 animate-in resizable-card">
       <div class="card-header">
         <div class="detail-header">
           <h2>{{ c.entreprise }}</h2>
@@ -25,14 +25,14 @@
       </div>
     </div>
 
-    <div class="card mb-3 animate-in">
+    <div class="card mb-3 animate-in resizable-card">
       <div class="card-header"><h5>Historique des statuts</h5></div>
       <div class="card-body">
         {% include "partials/timeline.html" %}
       </div>
     </div>
 
-    <div class="card mb-3 animate-in" id="contenu-card">
+    <div class="card mb-3 animate-in resizable-card" id="contenu-card">
       <div class="card-header contenu-card-header">
         <h5>Contenu</h5>
         <button type="button" class="btn-icon" id="contenu-edit-btn" title="Editer le contenu" aria-label="Editer le contenu">
@@ -64,8 +64,11 @@
     </div>
   </div>
 
+  <!-- Resize handle -->
+  <div class="detail-resize-handle" title="Redimensionner"></div>
+
   <!-- Side panel -->
-  <div class="col-md-4">
+  <div class="detail-side-col">
     <!-- Edit form -->
     <div class="card mb-3 animate-in">
       <div class="card-header">
@@ -183,6 +186,45 @@
         <a href="#" class="btn btn-outline-secondary btn-sm w-100" onclick="event.preventDefault(); convertCV('{{ c.slug }}')">
           Exporter en PDF/DOCX
         </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Match Evaluation -->
+    {% if cv_reference_configured %}
+    <div class="card mb-3 animate-in">
+      <div class="card-header">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          Match
+        </h5>
+      </div>
+      <div class="card-body">
+        <button id="match-btn" class="btn btn-primary btn-sm w-100 mb-2" onclick="evaluateMatch('{{ c.slug }}')">
+          {{ 'Reevaluer le match' if c.match_score is not none else 'Evaluer le match' }}
+        </button>
+        {% if c.match_details %}
+        <div class="match-details" id="match-details">
+          <details open>
+            <summary>Details du match ({{ c.match_score | int }}%)</summary>
+            {% if c.match_details.strengths %}
+            <span class="match-label">Points forts</span>
+            <ul>{% for s in c.match_details.strengths %}<li>{{ s }}</li>{% endfor %}</ul>
+            {% endif %}
+            {% if c.match_details.weaknesses %}
+            <span class="match-label">Points faibles</span>
+            <ul>{% for w in c.match_details.weaknesses %}<li>{{ w }}</li>{% endfor %}</ul>
+            {% endif %}
+            {% if c.match_details.missing %}
+            <span class="match-label">Competences manquantes</span>
+            <ul>{% for m in c.match_details.missing %}<li>{{ m }}</li>{% endfor %}</ul>
+            {% endif %}
+          </details>
+        </div>
+        {% endif %}
       </div>
     </div>
     {% endif %}
@@ -554,6 +596,73 @@ function convertCV(slug) {
     alert('Erreur de connexion: ' + err.message);
   });
 }
+
+/* --- Evaluate match (AI) --- */
+function evaluateMatch(slug) {
+  var btn = document.getElementById('match-btn');
+  btn.disabled = true;
+  btn.textContent = 'Evaluation en cours...';
+
+  fetch('/api/candidatures/' + slug + '/match', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(function(r) {
+    return r.json().then(function(d) { return { ok: r.ok, data: d }; });
+  })
+  .then(function(result) {
+    if (result.ok) {
+      window.location.reload();
+    } else {
+      alert(result.data.error || 'Erreur lors de l\'evaluation');
+      btn.disabled = false;
+      btn.textContent = 'Evaluer le match';
+    }
+  })
+  .catch(function(err) {
+    alert('Erreur de connexion: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Evaluer le match';
+  });
+}
+
+/* --- Horizontal resize handle --- */
+(function() {
+  var handle = document.querySelector('.detail-resize-handle');
+  var layout = document.querySelector('.detail-layout');
+  var sideCol = document.querySelector('.detail-side-col');
+  if (!handle || !layout || !sideCol) return;
+
+  var startX, startWidth;
+
+  handle.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    startX = e.clientX;
+    startWidth = sideCol.getBoundingClientRect().width;
+    handle.classList.add('dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+  });
+
+  function onMouseMove(e) {
+    var dx = startX - e.clientX;
+    var newWidth = startWidth + dx;
+    var layoutWidth = layout.getBoundingClientRect().width;
+    var pct = (newWidth / layoutWidth) * 100;
+    pct = Math.max(20, Math.min(50, pct));
+    sideCol.style.flex = '0 0 ' + pct + '%';
+  }
+
+  function onMouseUp() {
+    handle.classList.remove('dragging');
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    document.removeEventListener('mousemove', onMouseMove);
+    document.removeEventListener('mouseup', onMouseUp);
+  }
+})();
 
 /* --- Update currentStatut after HTMX swap (edit form) --- */
 document.addEventListener('htmx:afterSwap', function(evt) {
