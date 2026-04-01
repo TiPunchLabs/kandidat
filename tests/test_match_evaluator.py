@@ -155,3 +155,63 @@ class TestMatchEvaluator:
 
             with pytest.raises(ValueError, match="contenu"):
                 evaluate_match("acme-corp")
+
+
+class TestMatchAPI:
+    """Test the match evaluation API endpoint."""
+
+    def test_post_match_returns_score(self, client, app):
+        with app.app_context():
+            from services.settings import set_setting, upload_cv_reference
+
+            upload_cv_reference("<html><body>CV Python Docker</body></html>")
+            set_setting("llm_provider", "ollama")
+
+        mock_provider = MagicMock()
+        mock_provider.complete.return_value = json.dumps({
+            "score": 78,
+            "strengths": ["Python"],
+            "weaknesses": ["No cloud"],
+            "missing": ["AWS"],
+        })
+
+        with patch("services.match_evaluator.get_provider", return_value=mock_provider):
+            resp = client.post("/api/candidatures/acme-corp/match")
+
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+        assert data["match_score"] == 78
+        assert "Python" in data["match_details"]["strengths"]
+
+    def test_post_match_not_found(self, client):
+        resp = client.post("/api/candidatures/unknown-slug/match")
+        assert resp.status_code == 404
+
+    def test_post_match_no_cv(self, client, app):
+        with app.app_context():
+            from services.database import db
+            from services.database import Setting
+            # Remove seeded CV reference
+            cv_setting = db.session.get(Setting, "cv_reference_html")
+            if cv_setting:
+                db.session.delete(cv_setting)
+                db.session.commit()
+
+        resp = client.post("/api/candidatures/acme-corp/match")
+        assert resp.status_code == 400
+        assert "CV" in resp.get_json()["error"]
+
+    def test_get_candidature_includes_match_score(self, client, app):
+        with app.app_context():
+            from services.database import Candidature, db
+
+            c = db.session.get(Candidature, "acme-corp")
+            c.match_score = 88.0
+            c.match_details = json.dumps({"strengths": ["A"], "weaknesses": [], "missing": []})
+            db.session.commit()
+
+        resp = client.get("/api/candidatures/acme-corp")
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+        assert data["match_score"] == 88.0
+        assert data["match_details"]["strengths"] == ["A"]

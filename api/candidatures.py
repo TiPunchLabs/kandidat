@@ -355,6 +355,31 @@ def api_save_cv(slug):
         return jsonify({"error": "Erreur interne du serveur"}), 500
 
 
+@api_bp.route("/candidatures/<slug>/match", methods=["POST"])
+@api_bp.doc(tags=["Match"], summary="Evaluate CV-offer match via LLM")
+def api_evaluate_match(slug):
+    """POST /api/candidatures/<slug>/match — Evaluate match percentage via LLM."""
+    try:
+        c = load_candidature(slug)
+        if c is None:
+            return jsonify({"error": f"Candidature '{slug}' non trouvee"}), 404
+
+        from services.match_evaluator import evaluate_match
+
+        result = evaluate_match(slug)
+        return jsonify({"data": result}), 200
+
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except ConnectionError as e:
+        return jsonify({"error": str(e)}), 503
+    except TimeoutError as e:
+        return jsonify({"error": str(e)}), 504
+    except Exception:
+        logger.exception("Error evaluating match for %s", slug)
+        return jsonify({"error": "Erreur interne du serveur"}), 500
+
+
 @api_bp.route("/candidatures/<slug>/cv/convert", methods=["POST"])
 @api_bp.doc(tags=["CV"], summary="Convert CV to PDF + DOCX without LLM")
 def api_convert_cv(slug):
