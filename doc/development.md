@@ -62,6 +62,7 @@ services/           Business logic (no direct Flask imports except current_app)
   cv_adapter.py     CV adaptation orchestrator (LLM context + prompts)
   cv_converter.py   HTML→PDF (WeasyPrint) + HTML→DOCX (BeautifulSoup)
   cible_enricher.py Company enrichment (Tavily + LLM extraction)
+  match_evaluator.py Match scoring (CV vs offer, LLM JSON evaluation)
   llm/              LLM provider package
     __init__.py     Provider Protocol + factory
     ollama.py       Ollama provider (local, httpx)
@@ -108,7 +109,7 @@ fix/cible-cascade-delete
 ### Tests
 
 - One file per layer: `test_candidature.py` (service), `test_routes.py` (web), `test_api.py` (API)
-- Feature-specific tests: `test_cv_adapt.py`, `test_cible_enricher.py`
+- Feature-specific tests: `test_cv_adapt.py`, `test_cible_enricher.py`, `test_match_evaluator.py`
 - Fixtures in `conftest.py`: in-memory database, seed data, files on disk via `tmp_path`
 - Convention: one class per feature, descriptive `test_*` methods
 

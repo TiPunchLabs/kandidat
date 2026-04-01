@@ -35,7 +35,8 @@ The deliberately simple stack (APIFlask, SQLite, Jinja2, vanilla CSS) is intenti
 - **PDF & DOCX export**: convert adapted CV to PDF (WeasyPrint with print-safe CSS, A4 layout) and DOCX (semantic HTML parsing, ATS-optimized structure)
 - **AI-powered company enrichment**: automatically enrich target company information via web search (Tavily) + LLM structured extraction — finds website, LinkedIn, description, contacts with review before applying
 - **Settings page**: configure LLM provider (Ollama/Claude), upload global reference CV with preview, edit system and user prompts, configure Tavily API key for web search
-- **MCP Server**: a TypeScript MCP server exposes 22 tools so an LLM agent (Claude Desktop, Claude Code) can manage applications, companies, and contacts via natural language — all through the REST API, respecting every business rule
+- **AI-powered match scoring**: evaluate how well your CV matches a job offer via LLM — returns a score (0-100%) with strengths, weaknesses, and missing skills, displayed as a colored badge on detail and dashboard pages
+- **MCP Server**: a TypeScript MCP server exposes 23 tools so an LLM agent (Claude Desktop, Claude Code) can manage applications, companies, and contacts via natural language — all through the REST API, respecting every business rule
 
 ## Screenshots
 

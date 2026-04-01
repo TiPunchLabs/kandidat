@@ -631,7 +631,7 @@ Agent:  → calls get_cible_detail({ cible_id: 15 }) to find contact_id
 
 ## 📚 10. Tool Reference
 
-Quick reference of all 22 MCP tools, grouped by action type.
+Quick reference of all 23 MCP tools, grouped by action type.
 
 ### READ tools (safe, no confirmation needed)
 
@@ -674,6 +674,7 @@ Quick reference of all 22 MCP tools, grouped by action type.
 | `apply_enrichment` | Apply selected enrichment suggestions to company + contacts |
 | `adapt_cv` | Generate LLM-adapted CV HTML for an application (read-only) |
 | `save_adapted_cv` | Save adapted CV as PDF + DOCX files |
+| `evaluate_match` | Evaluate CV-offer match percentage via LLM (score + strengths/weaknesses/missing) |
 
 ------
 
