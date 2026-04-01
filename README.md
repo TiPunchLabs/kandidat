@@ -37,44 +37,45 @@ The deliberately simple stack (APIFlask, SQLite, Jinja2, vanilla CSS) is intenti
 - **PDF & DOCX export**: convert adapted CV to PDF (WeasyPrint with print-safe CSS, A4 layout) and DOCX (semantic HTML parsing, ATS-optimized structure)
 - **AI-powered company enrichment**: automatically enrich target company information via web search (Tavily) + LLM structured extraction — finds website, LinkedIn, description, contacts with review before applying
 - **Settings page**: configure LLM provider (Ollama/Claude), upload global reference CV with preview, edit system and user prompts, configure Tavily API key for web search
-- **MCP Server**: a TypeScript MCP server exposes 22 tools so an LLM agent (Claude Desktop, Claude Code) can manage applications, companies, and contacts via natural language — all through the REST API, respecting every business rule
+- **AI-powered match scoring**: evaluate how well your CV matches a job offer via LLM — returns a score (0-100%) with strengths, weaknesses, and missing skills, displayed as a colored badge on detail and dashboard pages
+- **MCP Server**: a TypeScript MCP server exposes 23 tools so an LLM agent (Claude Desktop, Claude Code) can manage applications, companies, and contacts via natural language — all through the REST API, respecting every business rule
 
 ## Screenshots
 
 <details>
 <summary>Dashboard — light theme</summary>
 
-![Dashboard](doc/screenshots/dashboard.png)
+![Dashboard](docs/screenshots/dashboard.png)
 </details>
 
 <details>
 <summary>Dashboard — dark theme</summary>
 
-![Dashboard dark](doc/screenshots/dashboard-dark.png)
+![Dashboard dark](docs/screenshots/dashboard-dark.png)
 </details>
 
 <details>
 <summary>Application detail</summary>
 
-![Detail](doc/screenshots/detail.png)
+![Detail](docs/screenshots/detail.png)
 </details>
 
 <details>
 <summary>Target companies</summary>
 
-![Cibles](doc/screenshots/cibles.png)
+![Cibles](docs/screenshots/cibles.png)
 </details>
 
 <details>
 <summary>Company detail</summary>
 
-![Cible detail](doc/screenshots/cible-detail.png)
+![Cible detail](docs/screenshots/cible-detail.png)
 </details>
 
 <details>
 <summary>Statistics</summary>
 
-![Stats](doc/screenshots/stats.png)
+![Stats](docs/screenshots/stats.png)
 </details>
 
 ## Prerequisites
@@ -133,7 +134,7 @@ docker compose --profile dev --profile ollama up
 
 Data is persisted in a `kandidat-data` Docker volume mounted at `/app/data`.
 
-Production is deployed on dockhost via the CI/CD pipeline (GitLab CI → bastion runner → Ansible playbook). See [doc/deployment.md](doc/deployment.md) for the full deployment architecture.
+Production is deployed on dockhost via the CI/CD pipeline (GitLab CI → bastion runner → Ansible playbook). See [docs/deployment.md](docs/deployment.md) for the full deployment architecture.
 
 ## MCP Server (LLM agent integration)
 
@@ -175,7 +176,7 @@ MCP_PORT=3002 KANDIDAT_API_URL=http://localhost:8000 pnpm dev
 
 **Claude Desktop** — add the same block to your `claude_desktop_config.json`.
 
-See [doc/mcp-architecture-proposal.md](doc/mcp-architecture-proposal.md) for the full architecture design.
+See [docs/mcp-architecture-proposal.md](docs/mcp-architecture-proposal.md) for the full architecture design.
 
 ## Tests
 
@@ -259,7 +260,7 @@ services/             # Business logic
 templates/            # Jinja2 templates
 static/               # CSS (custom design system)
 tests/                # pytest test suite
-doc/                  # Technical documentation
+docs/                 # Technical documentation
 mcp/                  # MCP Server (TypeScript, streamable HTTP)
   src/                # Tools, resources, HTTP client
   package.json        # Node.js dependencies

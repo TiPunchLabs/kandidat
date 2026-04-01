@@ -28,6 +28,8 @@ class Candidature(db.Model):
     cible_id = db.Column(db.Integer, db.ForeignKey("cibles.id"), nullable=False)
     tags = db.Column(db.String, nullable=False, default='["candidature"]')
     contenu = db.Column(db.Text, nullable=False, default="")
+    match_score = db.Column(db.Float, nullable=True, default=None)
+    match_details = db.Column(db.Text, nullable=True, default=None)
 
     fichiers = db.relationship("Fichier", backref="candidature", cascade="all, delete-orphan")
     cible = db.relationship("Cible", backref=db.backref("candidatures", lazy="dynamic"))
@@ -126,6 +128,7 @@ def init_app(app: Flask) -> None:
         db.create_all()
         _migrate_cibles(app)
         _migrate_candidatures_cible_id()
+        _migrate_match_scoring()
         _migrate_historique_statuts()
         _migrate_historique_commentaire()
         _migrate_settings()
@@ -246,3 +249,13 @@ def _migrate_historique_commentaire() -> None:
 def _migrate_settings() -> None:
     """Ensure the settings table exists (created by db.create_all, this is a no-op safety net)."""
     db.create_all()
+
+
+def _migrate_match_scoring() -> None:
+    """Add match_score and match_details columns to candidatures if they don't exist yet."""
+    cols = _get_column_names("candidatures")
+    if "match_score" not in cols:
+        with db.engine.connect() as conn:
+            conn.execute(db.text("ALTER TABLE candidatures ADD COLUMN match_score REAL DEFAULT NULL"))
+            conn.execute(db.text("ALTER TABLE candidatures ADD COLUMN match_details TEXT DEFAULT NULL"))
+            conn.commit()

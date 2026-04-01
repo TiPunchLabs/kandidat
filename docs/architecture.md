@@ -6,7 +6,7 @@
   Claude Desktop /           MCP Protocol               ┌──────────────────┐
   Claude Code         ◄── streamable HTTP ──►           │  MCP Server (TS) │
   (LLM agent)              port 3001                    │  mcp/src/        │
-                                                        │  22 tools        │
+                                                        │  23 tools        │
                                                         │  1 resource      │
                                                         └────────┬─────────┘
                                                                  │ HTTP/JSON
@@ -39,6 +39,7 @@
                     │ cv_adapter.py  │  CV adaptation orchestrator (LLM)
                     │ cv_converter.py│  HTML→PDF + HTML→DOCX conversion
                     │ cible_enricher │  Enrichment (Tavily + LLM)
+                    │ match_evaluator│  Match scoring (CV vs offer, LLM)
                     │ llm/           │  LLM provider package
                     │   __init__.py  │    Protocol + factory
                     │   ollama.py    │    Ollama provider (local)
@@ -96,7 +97,7 @@ brouillon ──► envoyee ──► relancee ──► entretien ──► acc
 | Blueprint | Prefix | Role |
 | --- | --- | --- |
 | `main` | `/` | HTML pages (dashboard, detail, create, stats, cibles, company detail, search, settings, help, about, CV preview/loading, enrichment loading/preview) |
-| `api` | `/api` | JSON endpoints (CRUD applications, companies, contacts, files, stats, search, settings, CV adapt/convert/save, enrichment) |
+| `api` | `/api` | JSON endpoints (CRUD applications, companies, contacts, files, stats, search, settings, CV adapt/convert/save, enrichment, match evaluation) |
 
 ## CV adaptation flow
 
@@ -121,6 +122,24 @@ cible_detail.html          cible_enrich_loading.html    cible_enrich_preview.htm
                                                         └─► Annuler  → retour cible detail
 ```
 
+## Match scoring flow
+
+```text
+detail.html
+"Evaluer le match"  ──►  POST /api/candidatures/{slug}/match
+                          │
+                          ├─► services/match_evaluator.py
+                          │     1. Resolve CV reference (global)
+                          │     2. Build prompts (system + user)
+                          │     3. LLM complete() → JSON
+                          │     4. Parse score + details
+                          │     5. Persist to DB
+                          │
+                          └─► 200 {match_score, match_details}
+                               │
+                               └─► reload page → badge + collapsible details
+```
+
 ### Enrichment orchestrator
 
 ```text
@@ -139,8 +158,9 @@ services/llm/__init__.py
   LLMProvider (Protocol)           get_provider() factory
        │                                │
        ├── complete()                  reads settings:
-       ├── adapt_cv()                   llm_provider, llm_url,
-       ├── health_check()              llm_model, llm_api_key
+       ├── adapt_cv()                   llm_provider, llm_ollama_url,
+       ├── health_check()              llm_ollama_model, llm_claude_api_key,
+       │                               llm_claude_model
        │
        ├── OllamaProvider
        │   (httpx → /v1/chat)
@@ -184,14 +204,14 @@ LLM Agent                          MCP Server                    kandidat API
 "3 applications sent"
 ```
 
-### Tool categories (22 total)
+### Tool categories (23 total)
 
 | Category | Tools | Annotations |
 | --- | --- | --- |
 | READ (8) | list/get candidatures, cibles, search, stats, settings, historique | `readOnlyHint: true` |
 | WRITE (7) | create/update candidatures, cibles, contacts, historique comment | `idempotentHint: true` (updates) |
 | DELETE (3) | delete candidature, cible, contact | `destructiveHint: true` |
-| AI (4) | enrich cible, apply enrichment, adapt CV, save CV | Mixed annotations |
+| AI (5) | enrich cible, apply enrichment, adapt CV, save CV, evaluate match | Mixed annotations |
 
 ### Resources
 

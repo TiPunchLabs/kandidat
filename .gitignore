@@ -46,5 +46,8 @@ CLAUDE.md
 # Temp
 tmp/
 
+# Docs (local only)
+docs/superpowers/
+
 # Data directories
 data/

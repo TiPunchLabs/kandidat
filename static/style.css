@@ -483,6 +483,54 @@ html.theme-transitioning *::after {
   color: var(--cat-organisation);
 }
 
+/* ── Match scoring ───────────────────────────────────────── */
+.badge-match {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: var(--radius);
+}
+.badge-match-low {
+  background: var(--status-refusee-bg);
+  color: var(--status-refusee);
+}
+.badge-match-medium {
+  background: var(--status-relancee-bg);
+  color: var(--status-relancee);
+}
+.badge-match-high {
+  background: var(--status-acceptee-bg);
+  color: var(--status-acceptee);
+}
+
+.match-details {
+  margin-top: 0.5rem;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+.match-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.match-details ul {
+  margin: 0.3rem 0 0 1.2rem;
+  padding: 0;
+}
+.match-details li {
+  margin-bottom: 0.15rem;
+}
+.match-details .match-label {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-top: 0.4rem;
+  display: block;
+}
+
 /* --- Priority indicators --- */
 .priorite-haute {
   color: var(--priority-haute);
@@ -2299,6 +2347,69 @@ dialog.comment-modal::backdrop {
   padding: 0.75rem 1rem;
   line-height: 1.7;
   overflow-x: auto;
+}
+
+/* --- Resizable detail layout --- */
+.detail-layout {
+  display: flex;
+  gap: 0;
+  align-items: flex-start;
+}
+.detail-main-col {
+  flex: 1 1 0;
+  min-width: 300px;
+  padding-right: 0.75rem;
+}
+.detail-side-col {
+  flex: 0 0 var(--detail-side-width, 33.333%);
+  min-width: 250px;
+  max-width: 50%;
+  padding-left: 0.75rem;
+}
+.detail-resize-handle {
+  flex: 0 0 6px;
+  cursor: col-resize;
+  background: var(--border);
+  border-radius: 3px;
+  min-height: 200px;
+  align-self: stretch;
+  opacity: 0.4;
+  transition: opacity 0.15s, background 0.15s;
+}
+.detail-resize-handle:hover,
+.detail-resize-handle.dragging {
+  opacity: 1;
+  background: var(--accent);
+}
+
+/* Resizable cards (vertical) */
+.detail-main-col .resizable-card {
+  resize: vertical;
+  overflow: hidden;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+}
+.detail-main-col .resizable-card > .card-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+}
+
+/* Stack on small screens */
+@media (max-width: 767.98px) {
+  .detail-layout {
+    flex-direction: column;
+  }
+  .detail-main-col,
+  .detail-side-col {
+    min-width: 100%;
+    max-width: 100%;
+    padding: 0;
+    flex: none;
+  }
+  .detail-resize-handle {
+    display: none;
+  }
 }
 
 /* --- Reduced motion --- */

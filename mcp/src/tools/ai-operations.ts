@@ -124,4 +124,32 @@ export function registerAiOperationTools(server: McpServer): void {
       };
     }
   );
+
+  server.registerTool(
+    "evaluate_match",
+    {
+      title: "Evaluate CV-Offer Match (AI)",
+      description:
+        "Evaluate how well your CV matches a job offer using AI. " +
+        "Returns a match percentage (0-100) with strengths, weaknesses, and missing skills. " +
+        "Requires LLM and CV reference to be configured in settings.",
+      inputSchema: z.object({
+        slug: z.string().describe("Candidature identifier"),
+      }),
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+      },
+    },
+    async ({ slug }) => {
+      const data = await apiPost(
+        `/api/candidatures/${encodeURIComponent(slug)}/match`,
+        {}
+      );
+      return {
+        content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
+      };
+    }
+  );
 }

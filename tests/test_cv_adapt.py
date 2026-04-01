@@ -660,7 +660,7 @@ class TestSettingsRoutes:
     def test_settings_page_shows_prompts_section(self, client):
         resp = client.get("/settings")
         html = resp.data.decode()
-        assert "Prompts d" in html
+        assert "Prompts LLM" in html
         assert "system-prompt" in html
         assert "user-prompt" in html
 
