@@ -8,6 +8,8 @@
 
 A personal web interface to track and manage job applications.
 
+> **New here?** See the [Quickstart guide](QUICKSTART.md) to get running in under 5 minutes.
+
 The idea: a simple, local tool you fully control. No account to create, no SaaS, no dependency on a third-party service. A SQLite database, a Flask server, a browser — that's it.
 
 kandidat lets you centralize your applications, track their progress through a controlled status workflow (draft, sent, followed-up, interview, accepted, rejected, archived), organize target companies by category, manage contacts per company, and keep a full history of every step. The interface is designed for daily use: a filterable dashboard, detailed application pages, attached file management (CV, cover letters, job offers), and statistics to step back and see the big picture.
