@@ -70,7 +70,7 @@ services/           Business logic (no direct Flask imports except current_app)
 templates/          Jinja2 templates
 static/             Custom CSS
 tests/              pytest tests
-doc/                Technical documentation
+docs/               Technical documentation
 mcp/                MCP Server (TypeScript)
   src/index.ts      Entry point (HTTP server, port 3001)
   src/client.ts     HTTP client for kandidat API
@@ -172,6 +172,22 @@ uv run python main.py
 
 # Terminal 2: start MCP server
 cd mcp && KANDIDAT_API_URL=http://localhost:8000 pnpm dev
+```
+
+### Makefile shortcuts
+
+The root `Makefile` provides shortcuts for common MCP commands. It checks that the target port
+is free before starting the server.
+
+| Target | Description |
+| --- | --- |
+| `make mcp-dev` | Start MCP server pointing to local kandidat (`localhost:8000`) |
+| `make mcp-prod` | Start MCP server pointing to prod (`kandidat.internal`) |
+
+Override the default port (3001) with the `MCP_PORT` variable:
+
+```bash
+make mcp-dev MCP_PORT=4000
 ```
 
 Then configure your LLM client (Claude Desktop or Claude Code):

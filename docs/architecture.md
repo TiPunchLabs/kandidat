@@ -158,8 +158,9 @@ services/llm/__init__.py
   LLMProvider (Protocol)           get_provider() factory
        │                                │
        ├── complete()                  reads settings:
-       ├── adapt_cv()                   llm_provider, llm_url,
-       ├── health_check()              llm_model, llm_api_key
+       ├── adapt_cv()                   llm_provider, llm_ollama_url,
+       ├── health_check()              llm_ollama_model, llm_claude_api_key,
+       │                               llm_claude_model
        │
        ├── OllamaProvider
        │   (httpx → /v1/chat)

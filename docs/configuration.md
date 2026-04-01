@@ -109,10 +109,12 @@ LLM provider settings are stored in the `settings` table (SQLite) and configured
 | Key | Description | Example |
 | --- | --- | --- |
 | `llm_provider` | Active LLM provider | `ollama` or `claude` |
-| `llm_url` | Provider server URL | `http://localhost:11434` |
-| `llm_model` | Model name | `llama3.2`, `claude-sonnet-4-20250514` |
-| `llm_api_key` | API key (distant providers only) | `sk-ant-...` |
+| `llm_ollama_url` | Ollama server URL | `http://localhost:11434` |
+| `llm_ollama_model` | Ollama model name | `llama3.2` |
+| `llm_claude_api_key` | Claude API key | `sk-ant-...` |
+| `llm_claude_model` | Claude model name | `claude-sonnet-4-20250514` |
 | `cv_reference_html` | Global reference CV (HTML content) | `<html>...</html>` |
+| `cv_reference_date` | Timestamp of last CV reference upload (auto-set) | `2026-04-01T10:30:00` |
 | `cv_adapt_system_prompt` | Custom system prompt for CV adaptation | (optional, default built-in) |
 | `cv_adapt_user_prompt` | Custom user prompt template for CV adaptation | (optional, default built-in) |
 | `match_system_prompt` | Custom system prompt for match evaluation | (optional, default built-in) |
