@@ -298,7 +298,6 @@ document.addEventListener('submit', function(e) {
 (function() {
   var form = document.getElementById('edit-form');
   if (!form) return;
-  var currentStatut = form.dataset.currentStatut;
   var statutSelect = form.querySelector('select[name="statut"]');
   if (!statutSelect) return;
   var dialog = document.getElementById('comment-modal');
@@ -308,16 +307,21 @@ document.addEventListener('submit', function(e) {
   var cancelBtn = document.getElementById('modal-cancel');
   var transitionDiv = document.getElementById('modal-transition');
 
+  /* Read currentStatut dynamically so it stays correct after HTMX swaps */
+  function getCurrentStatut() {
+    return form.dataset.currentStatut;
+  }
+
   textarea.addEventListener('input', function() {
     charCount.textContent = textarea.value.length + ' / 1000';
   });
 
   form.addEventListener('submit', function(e) {
+    var current = getCurrentStatut();
     var newStatut = statutSelect.value;
-    if (newStatut !== currentStatut) {
+    if (newStatut !== current) {
       e.preventDefault();
-      // Populate transition badges
-      transitionDiv.innerHTML = '<span class="badge badge-' + currentStatut + '">' + currentStatut + '</span>'
+      transitionDiv.innerHTML = '<span class="badge badge-' + current + '">' + current + '</span>'
         + ' <span class="timeline-arrow">&rarr;</span> '
         + '<span class="badge badge-' + newStatut + '">' + newStatut + '</span>';
       textarea.value = '';
@@ -327,7 +331,6 @@ document.addEventListener('submit', function(e) {
   });
 
   confirmBtn.addEventListener('click', function() {
-    // Inject commentaire as hidden input
     var existing = form.querySelector('input[name="commentaire"]');
     if (existing) existing.remove();
     var hidden = document.createElement('input');
@@ -336,7 +339,6 @@ document.addEventListener('submit', function(e) {
     hidden.value = textarea.value;
     form.appendChild(hidden);
     dialog.close();
-    // Use HTMX if available, fallback to form.submit()
     if (typeof htmx !== 'undefined') {
       htmx.trigger(form, 'submit');
     } else {
@@ -346,12 +348,11 @@ document.addEventListener('submit', function(e) {
 
   cancelBtn.addEventListener('click', function() {
     dialog.close();
-    statutSelect.value = currentStatut;
+    statutSelect.value = getCurrentStatut();
   });
 
-  // Also handle Escape / backdrop click
   dialog.addEventListener('close', function() {
-    statutSelect.value = currentStatut;
+    statutSelect.value = getCurrentStatut();
   });
 })();
 
@@ -416,13 +417,14 @@ document.addEventListener('submit', function(e) {
 })();
 
 /* --- Commentaire card via timeline dot click (US2b) --- */
+/* Uses event delegation on #timeline-container so listeners survive HTMX swaps */
 (function() {
   var slug = '{{ c.slug }}';
   var commentCard = document.getElementById('commentaire-card');
   var commentBody = document.getElementById('commentaire-card-body');
   var closeBtn = document.getElementById('commentaire-close-btn');
-  var dots = document.querySelectorAll('.timeline-dot');
-  if (!commentCard || !commentBody) return;
+  var timelineContainer = document.getElementById('timeline-container');
+  if (!commentCard || !commentBody || !timelineContainer) return;
 
   var activeDot = null;
 
@@ -541,37 +543,40 @@ document.addEventListener('submit', function(e) {
     });
   }
 
-  dots.forEach(function(dot) {
-    dot.addEventListener('click', function() {
-      var li = dot.closest('.timeline-item');
-      if (!li) return;
-      var hId = li.dataset.historiqueId;
-      var comment = li.dataset.commentaire || '';
-      var commentHtml = li.dataset.commentaireHtml || '';
-      var ancien = li.dataset.ancienStatut;
-      var nouveau = li.dataset.nouveauStatut;
-      var date = li.dataset.date;
+  /* Event delegation: listen on the stable container, match .timeline-dot */
+  timelineContainer.addEventListener('click', function(e) {
+    var dot = e.target.closest('.timeline-dot');
+    if (!dot) return;
 
-      // If clicking the already active dot, close
-      if (activeDot === dot) {
-        closeCommentCard();
-        return;
-      }
+    var li = dot.closest('.timeline-item');
+    if (!li) return;
+    var hId = li.dataset.historiqueId;
+    var comment = li.dataset.commentaire || '';
+    var commentHtml = li.dataset.commentaireHtml || '';
+    var ancien = li.dataset.ancienStatut;
+    var nouveau = li.dataset.nouveauStatut;
+    var date = li.dataset.date;
 
-      if (activeDot) activeDot.classList.remove('timeline-dot--active');
-      dot.classList.add('timeline-dot--active');
-      activeDot = dot;
+    if (activeDot === dot) {
+      closeCommentCard();
+      return;
+    }
 
-      commentCard.style.display = '';
-      showCommentRead(li, hId, comment, commentHtml, ancien, nouveau, date);
-    });
+    if (activeDot) activeDot.classList.remove('timeline-dot--active');
+    dot.classList.add('timeline-dot--active');
+    activeDot = dot;
 
-    dot.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        dot.click();
-      }
-    });
+    commentCard.style.display = '';
+    showCommentRead(li, hId, comment, commentHtml, ancien, nouveau, date);
+  });
+
+  timelineContainer.addEventListener('keydown', function(e) {
+    var dot = e.target.closest('.timeline-dot');
+    if (!dot) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      dot.click();
+    }
   });
 })();
 
@@ -666,20 +671,16 @@ function evaluateMatch(slug) {
 
 /* --- Update currentStatut after HTMX swap (edit form) --- */
 document.addEventListener('htmx:afterSwap', function(evt) {
-  // Update edit form currentStatut from the header badge
   var badge = document.getElementById('header-badge');
   var editForm = document.getElementById('edit-form');
   if (badge && editForm) {
-    var newStatut = badge.textContent.trim();
-    editForm.dataset.currentStatut = newStatut;
-    // Update the JS variable used by the comment modal
-    var statutSelect = editForm.querySelector('select[name="statut"]');
-    if (statutSelect) {
-      // Re-bind the comment modal logic with updated currentStatut
-      window._kandidatCurrentStatut = newStatut;
-    }
+    editForm.dataset.currentStatut = badge.textContent.trim();
   }
-  // Re-process HTMX on newly swapped content
+  // Close comment card when timeline is swapped (new dots replace old ones)
+  var commentCard = document.getElementById('commentaire-card');
+  if (commentCard) {
+    commentCard.style.display = 'none';
+  }
   if (typeof htmx !== 'undefined') {
     htmx.process(evt.detail.target);
   }
