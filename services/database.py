@@ -83,6 +83,7 @@ class Cible(db.Model):
     description = db.Column(db.String, nullable=False, default="")
     email = db.Column(db.String, nullable=False, default="")
     linkedin = db.Column(db.String, nullable=False, default="")
+    inscrit_plateforme = db.Column(db.Integer, nullable=False, default=0)
 
     contacts = db.relationship("Contact", backref="cible", cascade="all, delete-orphan", lazy="dynamic")
 
@@ -132,6 +133,7 @@ def init_app(app: Flask) -> None:
         _migrate_historique_statuts()
         _migrate_historique_commentaire()
         _migrate_settings()
+        _migrate_inscrit_plateforme()
 
 
 def _get_column_names(table_name: str) -> list[str]:
@@ -249,6 +251,18 @@ def _migrate_historique_commentaire() -> None:
 def _migrate_settings() -> None:
     """Ensure the settings table exists (created by db.create_all, this is a no-op safety net)."""
     db.create_all()
+
+
+def _migrate_inscrit_plateforme() -> None:
+    """Add inscrit_plateforme column to cibles if it doesn't exist."""
+    cols = _get_column_names("cibles")
+    if "inscrit_plateforme" not in cols:
+        with db.engine.connect() as conn:
+            try:
+                conn.execute(db.text("ALTER TABLE cibles ADD COLUMN inscrit_plateforme INTEGER NOT NULL DEFAULT 0"))
+                conn.commit()
+            except (OperationalError, ProgrammingError):
+                conn.rollback()
 
 
 def _migrate_match_scoring() -> None:

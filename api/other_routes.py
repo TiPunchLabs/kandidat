@@ -107,6 +107,7 @@ def api_cibles_create():
             description=cible.description,
             email=cible.email,
             linkedin=cible.linkedin,
+            inscrit_plateforme=bool(cible.inscrit_plateforme),
         )
         return jsonify({"data": resp.model_dump()}), 201
     except Exception as e:
@@ -144,6 +145,7 @@ def api_cibles_update(cible_id):
             description=cible.description,
             email=cible.email,
             linkedin=cible.linkedin,
+            inscrit_plateforme=bool(cible.inscrit_plateforme),
         )
         return jsonify({"data": resp.model_dump()})
     except Exception as e:
@@ -209,6 +211,33 @@ def api_cibles_toggle():
         return jsonify({"data": {"nom": nom, "contactee": bool(contactee)}})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@api_bp.route("/cibles/<int:cible_id>/toggle-inscription", methods=["POST"])
+@api_bp.doc(tags=["Cibles"], summary="Toggle platform registration for a cabinet")
+def api_cible_toggle_inscription(cible_id):
+    """Toggle inscrit_plateforme for a cabinet cible."""
+    from services.cibles import toggle_inscription_plateforme
+
+    result = toggle_inscription_plateforme(cible_id)
+    if result is None:
+        return jsonify({"error": "cible not found"}), 404
+    if isinstance(result, str):
+        return jsonify({"error": result}), 400
+
+    resp = CibleResponse(
+        id=result.id,
+        nom=result.nom,
+        categorie=result.categorie,
+        contactee=bool(result.contactee),
+        position=result.position,
+        url=result.url,
+        description=result.description,
+        email=result.email,
+        linkedin=result.linkedin,
+        inscrit_plateforme=bool(result.inscrit_plateforme),
+    )
+    return jsonify({"data": resp.model_dump()})
 
 
 # ---------------------------------------------------------------------------

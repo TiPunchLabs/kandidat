@@ -39,6 +39,7 @@ def load_cibles() -> dict[str, list[dict]]:
                 description=row.description,
                 email=row.email,
                 linkedin=row.linkedin,
+                inscrit_plateforme=bool(row.inscrit_plateforme),
             )
             data = resp.model_dump()
             data["candidatures_count"] = Candidature.query.filter(
@@ -63,6 +64,7 @@ def list_all_cibles() -> list[dict]:
             description=row.description,
             email=row.email,
             linkedin=row.linkedin,
+            inscrit_plateforme=bool(row.inscrit_plateforme),
         ).model_dump()
         for row in rows
     ]
@@ -173,6 +175,21 @@ def toggle_cible(company: str, checked: bool) -> bool | None:
     return True
 
 
+def toggle_inscription_plateforme(cible_id: int) -> "Cible | None | str":
+    """Toggle inscrit_plateforme for a cabinet cible.
+
+    Returns the updated Cible, None if not found, or an error string if not a cabinet.
+    """
+    cible = db.session.get(Cible, cible_id)
+    if cible is None:
+        return None
+    if cible.categorie != "cabinets":
+        return "inscrit_plateforme is only available for cabinets"
+    cible.inscrit_plateforme = 0 if cible.inscrit_plateforme else 1
+    db.session.commit()
+    return cible
+
+
 def get_cible_detail(cible_id: int) -> dict | None:
     """Return a cible with its contacts and linked candidatures."""
     cible = db.session.get(Cible, cible_id)
@@ -213,6 +230,7 @@ def get_cible_detail(cible_id: int) -> dict | None:
         "description": cible.description,
         "email": cible.email,
         "linkedin": cible.linkedin,
+        "inscrit_plateforme": bool(cible.inscrit_plateforme),
         "contacts": contacts,
         "candidatures": candidatures,
     }
