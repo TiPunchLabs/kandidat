@@ -76,7 +76,13 @@ def get_cible(cible_id: int) -> Cible | None:
 
 
 def create_cible(
-    nom: str, categorie: str, url: str = "", description: str = "", email: str = "", linkedin: str = ""
+    nom: str,
+    categorie: str,
+    url: str = "",
+    description: str = "",
+    email: str = "",
+    linkedin: str = "",
+    inscrit_plateforme: bool = False,
 ) -> Cible:
     """Create a new cible at the last position in its category."""
     max_pos = db.session.query(db.func.max(Cible.position)).filter_by(categorie=categorie).scalar()
@@ -91,6 +97,7 @@ def create_cible(
         description=description,
         email=email,
         linkedin=linkedin,
+        inscrit_plateforme=1 if inscrit_plateforme else 0,
     )
     db.session.add(cible)
     db.session.commit()

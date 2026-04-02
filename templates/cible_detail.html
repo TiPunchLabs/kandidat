@@ -28,6 +28,20 @@
           {% if cible.url %}<tr><th>Site web</th><td><a href="{{ cible.url }}" target="_blank" rel="noopener">{{ cible.url }}</a></td></tr>{% endif %}
           {% if cible.linkedin %}<tr><th>LinkedIn</th><td><a href="{{ cible.linkedin }}" target="_blank" rel="noopener">{{ cible.linkedin }}</a></td></tr>{% endif %}
           {% if cible.email %}<tr><th>Email</th><td><a href="mailto:{{ cible.email }}">{{ cible.email }}</a></td></tr>{% endif %}
+          {% if cible.categorie == 'cabinets' %}
+          <tr>
+            <th>Inscription plateforme</th>
+            <td>
+              <button type="button"
+                      class="cible-inscription-badge{% if cible.inscrit_plateforme %} cible-inscription-badge--active{% endif %}"
+                      id="detail-inscription-badge"
+                      data-cible-id="{{ cible.id }}"
+                      title="{% if cible.inscrit_plateforme %}Inscrit sur la plateforme{% else %}Non inscrit sur la plateforme{% endif %}">
+                {% if cible.inscrit_plateforme %}Inscrit{% else %}Non inscrit{% endif %}
+              </button>
+            </td>
+          </tr>
+          {% endif %}
         </table>
       </div>
     </div>
@@ -313,6 +327,27 @@
       return;
     }
   });
+  // Inscription badge toggle (cabinets only)
+  var inscBadge = document.getElementById('detail-inscription-badge');
+  if (inscBadge) {
+    inscBadge.addEventListener('click', function() {
+      var cibleId = inscBadge.dataset.cibleId;
+      fetch('/api/cibles/' + cibleId + '/toggle-inscription', { method: 'POST' })
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+          if (data.data) {
+            var active = data.data.inscrit_plateforme;
+            inscBadge.textContent = active ? 'Inscrit' : 'Non inscrit';
+            inscBadge.title = active ? 'Inscrit sur la plateforme' : 'Non inscrit sur la plateforme';
+            if (active) {
+              inscBadge.classList.add('cible-inscription-badge--active');
+            } else {
+              inscBadge.classList.remove('cible-inscription-badge--active');
+            }
+          }
+        });
+    });
+  }
 })();
 </script>
 {% endblock %}

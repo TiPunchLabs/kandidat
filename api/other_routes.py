@@ -96,6 +96,7 @@ def api_cibles_create():
             description=payload.description,
             email=payload.email,
             linkedin=payload.linkedin,
+            inscrit_plateforme=payload.inscrit_plateforme,
         )
         resp = CibleResponse(
             id=cible.id,
