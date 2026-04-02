@@ -125,6 +125,26 @@
       }
       return;
     }
+    // Inscription badge toggle
+    var inscBadge = e.target.closest('.cible-inscription-badge');
+    if (inscBadge) {
+      var cibleId = inscBadge.dataset.cibleId;
+      fetch('/api/cibles/' + cibleId + '/toggle-inscription', { method: 'POST' })
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+          if (data.data) {
+            var active = data.data.inscrit_plateforme;
+            inscBadge.textContent = active ? 'Inscrit' : 'Non inscrit';
+            inscBadge.title = active ? 'Inscrit sur la plateforme' : 'Non inscrit sur la plateforme';
+            if (active) {
+              inscBadge.classList.add('cible-inscription-badge--active');
+            } else {
+              inscBadge.classList.remove('cible-inscription-badge--active');
+            }
+          }
+        });
+      return;
+    }
     // Edit button
     var editBtn = e.target.closest('.cible-btn-edit');
     if (editBtn) {

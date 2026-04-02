@@ -531,6 +531,17 @@ class TestCibleDetail:
         resp = client.get("/cible/9999")
         assert resp.status_code == 404
 
+    def test_cible_detail_shows_inscription_badge_for_cabinet(self, client):
+        resp = client.get("/cible/7")  # Alpha Conseil (cabinet)
+        assert resp.status_code == 200
+        assert b"Inscription plateforme" in resp.data
+        assert b"Non inscrit" in resp.data
+
+    def test_cible_detail_hides_inscription_badge_for_non_cabinet(self, client):
+        resp = client.get("/cible/4")  # Orange Caraibe (entreprise)
+        assert resp.status_code == 200
+        assert b"Inscription plateforme" not in resp.data
+
 
 class TestCibleEdit:
     def test_edit_cible_from_detail(self, client, app):

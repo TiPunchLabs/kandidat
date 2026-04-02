@@ -42,6 +42,14 @@
         <label class="cible-label" for="cible-{{ c.id }}" data-id="{{ c.id }}">
           <a href="{{ url_for('main.cible_detail', cible_id=c.id) }}" class="cible-name-link" onclick="event.stopPropagation()">{{ c.nom }}</a>
           {% if locked %}<span class="cible-lock-badge">{{ c.candidatures_count }} candidature{{ 's' if c.candidatures_count > 1 }}</span>{% endif %}
+          {% if cat_key == 'cabinets' %}
+          <button type="button"
+                  class="cible-inscription-badge{% if c.inscrit_plateforme %} cible-inscription-badge--active{% endif %}"
+                  data-cible-id="{{ c.id }}"
+                  title="{% if c.inscrit_plateforme %}Inscrit sur la plateforme{% else %}Non inscrit sur la plateforme{% endif %}">
+            {% if c.inscrit_plateforme %}Inscrit{% else %}Non inscrit{% endif %}
+          </button>
+          {% endif %}
         </label>
         {% if c.description or c.url or c.email or c.linkedin %}
         <div class="cible-details">

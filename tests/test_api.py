@@ -452,6 +452,53 @@ class TestCibles:
         # Files on disk should be removed
         assert not (data_dir / "candidatures" / "acme-corp").exists()
 
+    def test_cible_response_includes_inscrit_plateforme(self, client):
+        r = client.get("/api/cibles")
+        data = r.get_json()["data"]
+        cabinets = data["cabinets"]
+        assert len(cabinets) > 0
+        assert "inscrit_plateforme" in cabinets[0]
+        assert cabinets[0]["inscrit_plateforme"] is False
+
+    def test_create_cible_with_inscrit_plateforme(self, client):
+        resp = client.post(
+            "/api/cibles",
+            json={
+                "nom": "Test Cabinet",
+                "categorie": "cabinets",
+                "inscrit_plateforme": True,
+            },
+        )
+        assert resp.status_code == 201
+        data = resp.get_json()["data"]
+        assert data["inscrit_plateforme"] is True
+
+
+class TestCibleInscriptionToggle:
+    """Tests for POST /api/cibles/<id>/toggle-inscription."""
+
+    def test_toggle_inscription_on(self, client):
+        resp = client.post("/api/cibles/7/toggle-inscription")
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+        assert data["inscrit_plateforme"] is True
+
+    def test_toggle_inscription_off(self, client):
+        client.post("/api/cibles/7/toggle-inscription")
+        resp = client.post("/api/cibles/7/toggle-inscription")
+        assert resp.status_code == 200
+        data = resp.get_json()["data"]
+        assert data["inscrit_plateforme"] is False
+
+    def test_toggle_inscription_non_cabinet_rejected(self, client):
+        resp = client.post("/api/cibles/4/toggle-inscription")
+        assert resp.status_code == 400
+        assert "cabinets" in resp.get_json()["error"].lower()
+
+    def test_toggle_inscription_not_found(self, client):
+        resp = client.post("/api/cibles/999/toggle-inscription")
+        assert resp.status_code == 404
+
 
 # ──────────────────────────────────────────────────────────────
 # Cible Detail + Contacts API
