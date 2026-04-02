@@ -20,44 +20,9 @@
     <div class="card animate-in">
       <div class="card-header"><h5>CV de reference</h5></div>
       <div class="card-body">
-        {% if cv_reference_configured %}
-          <div class="alert alert-success mb-3">
-            CV de reference configure
-            {% if cv_reference_date %}
-              <small class="d-block text-muted">Mis a jour le {{ cv_reference_date }}</small>
-            {% endif %}
-          </div>
-        {% else %}
-          <div class="alert alert-warning mb-3">
-            Aucun CV de reference configure. Uploadez un fichier HTML pour commencer.
-          </div>
-        {% endif %}
-
-        {% if cv_reference_configured %}
-        <div class="mb-3">
-          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openCVPreview()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-            </svg>
-            Visualiser
-          </button>
+        <div id="cv-reference-section">
+          {% include "partials/cv_reference.html" %}
         </div>
-        {% endif %}
-
-        <form method="post" action="{{ url_for('main.upload_cv_reference_route') }}" enctype="multipart/form-data"
-              hx-post="{{ url_for('main.upload_cv_reference_route') }}"
-              hx-target="#flash-messages"
-              hx-swap="innerHTML"
-              hx-encoding="multipart/form-data"
-              hx-disabled-elt="find button[type='submit']">
-          <div class="mb-3">
-            <label for="cv-file" class="form-label">Fichier HTML du CV</label>
-            <input type="file" name="file" id="cv-file" class="form-control" accept=".html" required>
-          </div>
-          <button type="submit" class="btn btn-primary btn-sm">
-            {% if cv_reference_configured %}Remplacer{% else %}Uploader{% endif %}
-          </button>
-        </form>
       </div>
     </div>
   </div>

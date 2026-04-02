@@ -773,7 +773,14 @@ def upload_cv_reference_route():
         flash(str(e), "danger")
 
     if is_htmx_request():
-        return render_template("partials/flash.html")
+        flash_html = render_template("partials/flash.html")
+        cv_section_html = render_template(
+            "partials/cv_reference.html",
+            cv_reference_configured=bool(get_setting("cv_reference_html")),
+            cv_reference_date=get_setting("cv_reference_date") or "",
+        )
+        oob = f'<div id="cv-reference-section" hx-swap-oob="innerHTML:#cv-reference-section">{cv_section_html}</div>'
+        return flash_html + oob
     return redirect(url_for("main.settings_page"))
 
 
