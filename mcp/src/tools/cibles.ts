@@ -79,6 +79,7 @@ export function registerCibleWriteTools(server: McpServer): void {
         description: z.optional(z.string()).describe("Short description"),
         email: z.optional(z.string()).describe("General contact email"),
         linkedin: z.optional(z.string()).describe("LinkedIn company page URL"),
+        inscrit_plateforme: z.optional(z.boolean()).describe("Registered on recruitment platform (cabinets only)"),
       }),
       annotations: {
         readOnlyHint: false,
@@ -108,6 +109,7 @@ export function registerCibleWriteTools(server: McpServer): void {
         description: z.optional(z.string()).describe("Description"),
         email: z.optional(z.string()).describe("Contact email"),
         linkedin: z.optional(z.string()).describe("LinkedIn URL"),
+        inscrit_plateforme: z.optional(z.boolean()).describe("Registered on recruitment platform (cabinets only)"),
       }),
       annotations: {
         readOnlyHint: false,

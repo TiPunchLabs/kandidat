@@ -461,11 +461,14 @@ class TestCibles:
         assert cabinets[0]["inscrit_plateforme"] is False
 
     def test_create_cible_with_inscrit_plateforme(self, client):
-        resp = client.post("/api/cibles", json={
-            "nom": "Test Cabinet",
-            "categorie": "cabinets",
-            "inscrit_plateforme": True,
-        })
+        resp = client.post(
+            "/api/cibles",
+            json={
+                "nom": "Test Cabinet",
+                "categorie": "cabinets",
+                "inscrit_plateforme": True,
+            },
+        )
         assert resp.status_code == 201
         data = resp.get_json()["data"]
         assert data["inscrit_plateforme"] is True
