@@ -7,6 +7,10 @@ from services.schemas import CibleResponse, ContactResponse
 
 CATEGORIES = ("grands-groupes", "esn", "entreprises", "cabinets", "organisations")
 
+_CIBLE_UPDATE_FIELDS = {"nom", "categorie", "url", "description", "email", "linkedin"}
+
+_CONTACT_UPDATE_FIELDS = {"nom", "prenom", "email", "telephone", "linkedin", "fonction"}
+
 CATEGORY_LABELS = {
     "grands-groupes": "Grands groupes",
     "esn": "ESN",
@@ -22,7 +26,18 @@ def load_cibles() -> dict[str, list[dict]]:
     Returns a dict with keys: 'grands-groupes', 'entreprises', 'cabinets'.
     Each value is a list of dicts with id, nom, categorie, contactee, position.
     """
+    from sqlalchemy import func
+
     rows = Cible.query.order_by(Cible.categorie, Cible.position).all()
+
+    # Single aggregation query for candidature counts (replaces N+1)
+    counts_query = (
+        db.session.query(Candidature.cible_id, func.count())
+        .filter(Candidature.statut != "archivee")
+        .group_by(Candidature.cible_id)
+        .all()
+    )
+    counts = dict(counts_query)
 
     categories: dict[str, list[dict]] = {cat: [] for cat in CATEGORIES}
 
@@ -42,9 +57,7 @@ def load_cibles() -> dict[str, list[dict]]:
                 inscrit_plateforme=bool(row.inscrit_plateforme),
             )
             data = resp.model_dump()
-            data["candidatures_count"] = Candidature.query.filter(
-                Candidature.cible_id == row.id, Candidature.statut != "archivee"
-            ).count()
+            data["candidatures_count"] = counts.get(row.id, 0)
             categories[cat].append(data)
 
     return categories
@@ -113,7 +126,7 @@ def update_cible(cible_id: int, **fields) -> Cible | None:
     for key, value in fields.items():
         if key == "contactee":
             cible.contactee = 1 if value else 0
-        elif hasattr(cible, key):
+        elif key in _CIBLE_UPDATE_FIELDS:
             setattr(cible, key, value)
 
     db.session.commit()
@@ -161,12 +174,12 @@ def reorder_cibles(categorie: str, ordered_ids: list[int]) -> bool:
     return True
 
 
-def toggle_cible(company: str, checked: bool) -> bool | None:
-    """Toggle a company's contacted status.
+def toggle_cible(cible_id: int, checked: bool) -> bool | None:
+    """Toggle a company's contacted status by ID.
 
     Returns True on success, False if not found, None if locked by candidatures.
     """
-    cible = Cible.query.filter_by(nom=company).first()
+    cible = db.session.get(Cible, cible_id)
     if cible is None:
         return False
 
@@ -262,7 +275,7 @@ def update_contact(contact_id: int, **fields) -> Contact | None:
         return None
 
     for key, value in fields.items():
-        if hasattr(contact, key):
+        if key in _CONTACT_UPDATE_FIELDS:
             setattr(contact, key, value)
 
     db.session.commit()

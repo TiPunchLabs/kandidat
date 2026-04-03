@@ -32,6 +32,7 @@ from services.database import Cible, db
 from services.fichiers import delete_fichier, get_fichier_path, upload_fichier
 from services.search import search_candidatures
 from services.settings import get_all_settings, get_cv_reference_html, get_setting, set_setting, upload_cv_reference
+from services.stats import compute_stats
 
 bp = Blueprint("main", __name__)
 
@@ -371,38 +372,15 @@ def create_candidature_submit():
 
 @bp.route("/stats")
 def stats():
-    candidatures = list_candidatures()
-
-    by_statut = {}
-    for s in STATUTS:
-        by_statut[s] = sum(1 for c in candidatures if c.get("statut") == s)
-
-    by_type = {}
-    for t in TYPES:
-        by_type[t] = sum(1 for c in candidatures if c.get("type") == t)
-
-    by_priorite = {}
-    for p in PRIORITES:
-        by_priorite[p] = sum(1 for c in candidatures if c.get("priorite") == p)
-
-    by_categorie = {}
-    for cat in CATEGORIES:
-        by_categorie[cat] = sum(1 for c in candidatures if c.get("categorie_entreprise", "entreprise") == cat)
-
-    # Timeline: sorted by date_candidature (exclude empty)
-    timeline = sorted(
-        [c for c in candidatures if c.get("date_candidature")],
-        key=lambda c: c["date_candidature"],
-    )
-
+    s = compute_stats()
     return render_template(
         "stats.html",
-        total=len(candidatures),
-        by_statut=by_statut,
-        by_type=by_type,
-        by_priorite=by_priorite,
-        by_categorie=by_categorie,
-        timeline=timeline,
+        total=s["total"],
+        by_statut=s["by_statut"],
+        by_type=s["by_type"],
+        by_priorite=s["by_priorite"],
+        by_categorie=s["by_categorie"],
+        timeline=s["timeline"],
     )
 
 
@@ -433,12 +411,16 @@ def cibles():
 
 @bp.route("/cibles/toggle", methods=["POST"])
 def cibles_toggle():
-    company = request.form.get("company", "").strip()
+    cible_id_str = request.form.get("cible_id", "").strip()
     checked_str = request.form.get("checked", "false")
-    if not company:
-        return jsonify({"ok": False, "error": "company is required"}), 400
+    if not cible_id_str:
+        return jsonify({"ok": False, "error": "cible_id is required"}), 400
+    try:
+        cible_id = int(cible_id_str)
+    except ValueError:
+        return jsonify({"ok": False, "error": "cible_id must be an integer"}), 400
     checked = checked_str.lower() == "true"
-    result = toggle_cible(company, checked)
+    result = toggle_cible(cible_id, checked)
     if result is False:
         return jsonify({"ok": False, "error": "company not found"}), 404
     if result is None:

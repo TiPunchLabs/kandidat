@@ -396,8 +396,8 @@ class TestCibles:
 
     def test_toggle_cible(self, client):
         r = client.post(
-            "/api/cibles/toggle",
-            json={"nom": "Orange Caraibe", "contactee": True},
+            "/api/cibles/4/toggle",
+            json={"contactee": True},
         )
         assert r.status_code == 200
         data = r.get_json()["data"]
@@ -405,26 +405,22 @@ class TestCibles:
 
     def test_toggle_cible_not_found(self, client):
         r = client.post(
-            "/api/cibles/toggle",
-            json={"nom": "Inconnu", "contactee": True},
+            "/api/cibles/9999/toggle",
+            json={"contactee": True},
         )
         assert r.status_code == 404
 
-    def test_toggle_cible_missing_nom(self, client):
-        r = client.post("/api/cibles/toggle", json={"contactee": True})
-        assert r.status_code == 400
-
     def test_toggle_cible_missing_contactee(self, client):
-        r = client.post("/api/cibles/toggle", json={"nom": "EDF"})
+        r = client.post("/api/cibles/4/toggle", json={})
         assert r.status_code == 400
 
     def test_toggle_cible_no_body(self, client):
-        r = client.post("/api/cibles/toggle", content_type="application/json")
+        r = client.post("/api/cibles/4/toggle", content_type="application/json")
         assert r.status_code == 400
 
     def test_toggle_locked_by_candidature(self, client):
         """Cannot uncheck a cible that has linked candidatures."""
-        r = client.post("/api/cibles/toggle", json={"nom": "Orange Caraibe", "contactee": False})
+        r = client.post("/api/cibles/4/toggle", json={"contactee": False})
         assert r.status_code == 409
         assert "verrouillee" in r.get_json()["error"]
 
@@ -572,6 +568,20 @@ class TestContactAPI:
     def test_delete_contact_404(self, client):
         r = client.delete("/api/cibles/4/contacts/9999")
         assert r.status_code == 404
+
+    def test_update_contact_wrong_cible(self, client):
+        """PUT returns 404 when contact does not belong to the given cible."""
+        # Contact 1 (Jean Dupont) belongs to cible 4, not cible 7
+        r = client.put("/api/cibles/7/contacts/1", json={"nom": "Hacked"})
+        assert r.status_code == 404
+        assert "error" in r.get_json()
+
+    def test_delete_contact_wrong_cible(self, client):
+        """DELETE returns 404 when contact does not belong to the given cible."""
+        # Contact 1 (Jean Dupont) belongs to cible 4, not cible 7
+        r = client.delete("/api/cibles/7/contacts/1")
+        assert r.status_code == 404
+        assert "error" in r.get_json()
 
 
 # ──────────────────────────────────────────────────────────────

@@ -187,12 +187,12 @@
   document.addEventListener('change', function(e) {
     var cb = e.target.closest('.cible-checkbox');
     if (!cb) return;
-    var company = cb.dataset.company;
+    var cibleId = cb.dataset.cibleId;
     var checked = cb.checked;
     fetch('{{ url_for("main.cibles_toggle") }}', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: 'company=' + encodeURIComponent(company) + '&checked=' + (checked ? 'true' : 'false')
+      body: 'cible_id=' + encodeURIComponent(cibleId) + '&checked=' + (checked ? 'true' : 'false')
     })
     .then(function(resp) { return resp.json(); })
     .then(function(data) {

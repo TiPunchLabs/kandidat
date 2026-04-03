@@ -31,32 +31,28 @@ logger = logging.getLogger(__name__)
 def api_list_candidatures():
     """List candidatures with optional filters: statut, type, priorite, categorie."""
     try:
-        candidatures = list_candidatures()
-
         statut = request.args.get("statut")
-        if statut:
-            if statut not in STATUTS:
-                return jsonify({"error": f"Statut invalide: {statut}"}), 400
-            candidatures = [c for c in candidatures if c.get("statut") == statut]
+        if statut and statut not in STATUTS:
+            return jsonify({"error": f"Statut invalide: {statut}"}), 400
 
         ctype = request.args.get("type")
-        if ctype:
-            if ctype not in TYPES:
-                return jsonify({"error": f"Type invalide: {ctype}"}), 400
-            candidatures = [c for c in candidatures if c.get("type") == ctype]
+        if ctype and ctype not in TYPES:
+            return jsonify({"error": f"Type invalide: {ctype}"}), 400
 
         priorite = request.args.get("priorite")
-        if priorite:
-            if priorite not in PRIORITES:
-                return jsonify({"error": f"Priorite invalide: {priorite}"}), 400
-            candidatures = [c for c in candidatures if c.get("priorite") == priorite]
+        if priorite and priorite not in PRIORITES:
+            return jsonify({"error": f"Priorite invalide: {priorite}"}), 400
 
         categorie = request.args.get("categorie")
-        if categorie:
-            if categorie not in CATEGORIES:
-                return jsonify({"error": f"Categorie invalide: {categorie}"}), 400
-            candidatures = [c for c in candidatures if c.get("categorie_entreprise") == categorie]
+        if categorie and categorie not in CATEGORIES:
+            return jsonify({"error": f"Categorie invalide: {categorie}"}), 400
 
+        candidatures = list_candidatures(
+            statut=statut or None,
+            type_=ctype or None,
+            priorite=priorite or None,
+            categorie=categorie or None,
+        )
         return jsonify({"data": candidatures}), 200
     except Exception:
         logger.exception("Error listing candidatures")
