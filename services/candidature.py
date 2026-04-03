@@ -81,9 +81,31 @@ def load_candidature(slug: str) -> dict | None:
     return CandidatureResponse.from_orm(obj).model_dump()
 
 
-def list_candidatures() -> list[dict]:
-    """List all candidatures ordered by slug."""
-    rows = Candidature.query.options(joinedload(Candidature.cible)).order_by(Candidature.slug).all()
+def list_candidatures(
+    *,
+    statut: str | None = None,
+    type_: str | None = None,
+    priorite: str | None = None,
+    categorie: str | None = None,
+) -> list[dict]:
+    """List candidatures ordered by slug, with optional SQL-level filters.
+
+    Args:
+        statut: Filter by statut value (e.g. "envoyee").
+        type_: Filter by type value (e.g. "offre"). Named type_ to avoid shadowing the built-in.
+        priorite: Filter by priorite value (e.g. "haute").
+        categorie: Filter by categorie_entreprise value (e.g. "esn").
+    """
+    query = Candidature.query.options(joinedload(Candidature.cible))
+    if statut is not None:
+        query = query.filter(Candidature.statut == statut)
+    if type_ is not None:
+        query = query.filter(Candidature.type == type_)
+    if priorite is not None:
+        query = query.filter(Candidature.priorite == priorite)
+    if categorie is not None:
+        query = query.filter(Candidature.categorie_entreprise == categorie)
+    rows = query.order_by(Candidature.slug).all()
     return [CandidatureResponse.from_orm(obj).model_dump() for obj in rows]
 
 
