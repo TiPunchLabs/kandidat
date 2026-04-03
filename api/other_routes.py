@@ -28,6 +28,8 @@ from services.cibles import (
     update_contact,
 )
 from services.dashboard import regenerate_dashboard
+from services.database import Contact as ContactModel
+from services.database import db
 from services.schemas import CibleCreate, CibleResponse, CibleUpdate, ContactCreate, ContactUpdate
 from services.search import search_candidatures
 
@@ -318,6 +320,11 @@ def api_contact_update(cible_id, contact_id):
     if not fields:
         return jsonify({"error": "no fields to update"}), 400
 
+    # Verify the contact exists and belongs to this cible before updating
+    contact_check = db.session.get(ContactModel, contact_id)
+    if contact_check is None or contact_check.cible_id != cible_id:
+        return jsonify({"error": "contact not found"}), 404
+
     try:
         contact = update_contact(contact_id, **fields)
         if contact is None:
@@ -343,6 +350,11 @@ def api_contact_update(cible_id, contact_id):
 @api_bp.doc(tags=["Contacts"], summary="Delete a contact")
 def api_contact_delete(cible_id, contact_id):
     """Delete a contact."""
+    # Verify the contact exists and belongs to this cible before deleting
+    contact_check = db.session.get(ContactModel, contact_id)
+    if contact_check is None or contact_check.cible_id != cible_id:
+        return jsonify({"error": "contact not found"}), 404
+
     try:
         success = delete_contact(contact_id)
         if not success:
