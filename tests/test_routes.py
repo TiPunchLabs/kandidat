@@ -680,31 +680,31 @@ class TestCibles:
 
 class TestCiblesToggle:
     def test_toggle_success(self, client):
+        # Groupe GBH has cible_id=1
         resp = client.post(
             "/cibles/toggle",
             data={
-                "company": "Groupe GBH",
+                "cible_id": "1",
                 "checked": "true",
             },
         )
         assert resp.status_code == 200
         assert resp.json["ok"] is True
 
-    def test_toggle_missing_company(self, client):
+    def test_toggle_missing_cible_id(self, client):
         resp = client.post(
             "/cibles/toggle",
             data={
-                "company": "",
                 "checked": "true",
             },
         )
         assert resp.status_code == 400
 
-    def test_toggle_unknown_company(self, client):
+    def test_toggle_unknown_cible_id(self, client):
         resp = client.post(
             "/cibles/toggle",
             data={
-                "company": "Unknown Corp",
+                "cible_id": "9999",
                 "checked": "true",
             },
         )
@@ -716,7 +716,7 @@ class TestCiblesToggle:
         resp = client.post(
             "/cibles/toggle",
             data={
-                "company": "Orange Caraibe",
+                "cible_id": "4",
                 "checked": "false",
             },
         )

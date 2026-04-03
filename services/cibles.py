@@ -174,12 +174,12 @@ def reorder_cibles(categorie: str, ordered_ids: list[int]) -> bool:
     return True
 
 
-def toggle_cible(company: str, checked: bool) -> bool | None:
-    """Toggle a company's contacted status.
+def toggle_cible(cible_id: int, checked: bool) -> bool | None:
+    """Toggle a company's contacted status by ID.
 
     Returns True on success, False if not found, None if locked by candidatures.
     """
-    cible = Cible.query.filter_by(nom=company).first()
+    cible = db.session.get(Cible, cible_id)
     if cible is None:
         return False
 

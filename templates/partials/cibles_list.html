@@ -36,7 +36,7 @@
         </div>
         <input class="cible-checkbox" type="checkbox"
                id="cible-{{ c.id }}"
-               data-company="{{ c.nom }}"
+               data-cible-id="{{ c.id }}"
                {% if c.contactee or locked %}checked{% endif %}
                {% if locked %}disabled{% endif %}>
         <label class="cible-label" for="cible-{{ c.id }}" data-id="{{ c.id }}">

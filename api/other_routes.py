@@ -13,7 +13,6 @@ from services.candidature import (
     STATUS_TRANSITIONS,
     STATUTS,
     TYPES,
-    list_candidatures,
 )
 from services.cibles import (
     create_cible,
@@ -32,6 +31,7 @@ from services.database import Contact as ContactModel
 from services.database import db
 from services.schemas import CibleCreate, CibleResponse, CibleUpdate, ContactCreate, ContactUpdate
 from services.search import search_candidatures
+from services.stats import compute_stats
 
 logger = logging.getLogger(__name__)
 
@@ -189,29 +189,25 @@ def api_cibles_reorder():
         return jsonify({"error": str(e)}), 500
 
 
-@api_bp.route("/cibles/toggle", methods=["POST"])
+@api_bp.route("/cibles/<int:cible_id>/toggle", methods=["POST"])
 @api_bp.doc(tags=["Cibles"], summary="Toggle a cible contacted status")
-def api_cibles_toggle():
-    """Toggle a company's contacted status."""
+def api_cibles_toggle(cible_id):
+    """Toggle a company's contacted status by ID."""
     body = request.get_json(silent=True)
     if not body:
         return jsonify({"error": "JSON body required"}), 400
-
-    nom = body.get("nom", "").strip() if body.get("nom") else ""
-    if not nom:
-        return jsonify({"error": "nom is required"}), 400
 
     contactee = body.get("contactee")
     if contactee is None:
         return jsonify({"error": "contactee is required"}), 400
 
     try:
-        result = toggle_cible(nom, bool(contactee))
+        result = toggle_cible(cible_id, bool(contactee))
         if result is False:
             return jsonify({"error": "company not found"}), 404
         if result is None:
             return jsonify({"error": "cible verrouillee par des candidatures existantes"}), 409
-        return jsonify({"data": {"nom": nom, "contactee": bool(contactee)}})
+        return jsonify({"data": {"id": cible_id, "contactee": bool(contactee)}})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -394,33 +390,7 @@ def api_search():
 def api_stats():
     """Statistics: counts by statut, type, priorite, categorie + timeline."""
     try:
-        candidatures = list_candidatures()
-
-        by_statut = {s: sum(1 for c in candidatures if c.get("statut") == s) for s in STATUTS}
-        by_type = {t: sum(1 for c in candidatures if c.get("type") == t) for t in TYPES}
-        by_priorite = {p: sum(1 for c in candidatures if c.get("priorite") == p) for p in PRIORITES}
-        by_categorie = {
-            cat: sum(1 for c in candidatures if c.get("categorie_entreprise", "entreprise") == cat)
-            for cat in CATEGORIES
-        }
-
-        timeline = sorted(
-            [c for c in candidatures if c.get("date_candidature")],
-            key=lambda c: c["date_candidature"],
-        )
-
-        return jsonify(
-            {
-                "data": {
-                    "total": len(candidatures),
-                    "by_statut": by_statut,
-                    "by_type": by_type,
-                    "by_priorite": by_priorite,
-                    "by_categorie": by_categorie,
-                    "timeline": timeline,
-                }
-            }
-        )
+        return jsonify({"data": compute_stats()})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
