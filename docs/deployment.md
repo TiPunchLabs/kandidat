@@ -346,6 +346,46 @@ automatically synced to the bastion before the next deploy.
 
 ------
 
+## GitHub mirror
+
+The GitLab repository is push-mirrored to GitHub for public visibility. The GitHub
+repository is **read-only** — all development (issues, MRs, CI/CD) happens on GitLab.
+
+### Mirror setup
+
+GitLab push mirror is configured in **Settings > Repository > Mirroring repositories**
+on the GitLab project. It pushes to `https://github.com/TiPunchLabs/kandidat.git`
+on every push to `main`.
+
+### Infrastructure as Code
+
+The GitHub repository itself is managed by Terraform in `github-terraform/`:
+
+```text
+github-terraform/
+├── providers.tf       # GitHub provider (integrations/github ~> 4.0)
+├── main.tf            # github_repository "mirror" resource
+├── variables.tf       # github_token, github_owner, repository_name, visibility
+└── outputs.tf         # repository_url, full_name, clone_url
+```
+
+The resource disables all collaboration features (issues, wiki, projects) and enables
+`archive_on_destroy` as a safety net.
+
+### Usage
+
+```bash
+cd github-terraform
+export TF_VAR_github_token="<GitHub PAT with repo scope>"
+terraform plan
+terraform apply
+```
+
+> **Note**: this is managed independently from `gitlab-terraform/` which handles the
+> GitLab project configuration.
+
+------
+
 ## Troubleshooting
 
 ### Check container status on dockhost
