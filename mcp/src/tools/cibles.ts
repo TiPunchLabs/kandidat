@@ -80,6 +80,7 @@ export function registerCibleWriteTools(server: McpServer): void {
         email: z.optional(z.string()).describe("General contact email"),
         linkedin: z.optional(z.string()).describe("LinkedIn company page URL"),
         inscrit_plateforme: z.optional(z.boolean()).describe("Registered on recruitment platform (cabinets only)"),
+        notes: z.optional(z.string()).describe("Markdown notes about the company"),
       }),
       annotations: {
         readOnlyHint: false,
@@ -100,7 +101,7 @@ export function registerCibleWriteTools(server: McpServer): void {
     {
       title: "Update Target Company",
       description:
-        "Update a target company's information: name, category, website, description, email, or LinkedIn URL.",
+        "Update a target company's information: name, category, website, description, email, LinkedIn URL, or notes.",
       inputSchema: z.object({
         cible_id: z.number().int().describe("Target company ID"),
         nom: z.optional(z.string()).describe("New company name"),
@@ -110,6 +111,7 @@ export function registerCibleWriteTools(server: McpServer): void {
         email: z.optional(z.string()).describe("Contact email"),
         linkedin: z.optional(z.string()).describe("LinkedIn URL"),
         inscrit_plateforme: z.optional(z.boolean()).describe("Registered on recruitment platform (cabinets only)"),
+        notes: z.optional(z.string()).describe("Markdown notes about the company"),
       }),
       annotations: {
         readOnlyHint: false,
