@@ -544,6 +544,9 @@ def cible_detail_edit(cible_id):
     linkedin = request.form.get("linkedin")
     if linkedin is not None:
         fields["linkedin"] = linkedin.strip()
+    notes = request.form.get("notes")
+    if notes is not None:
+        fields["notes"] = notes
     if not fields:
         flash("Aucun champ a mettre a jour.", "danger")
         return redirect(url_for("main.cible_detail", cible_id=cible_id))
