@@ -469,6 +469,25 @@ class TestCibles:
         data = resp.get_json()["data"]
         assert data["inscrit_plateforme"] is True
 
+    def test_update_cible_notes(self, client):
+        r = client.put("/api/cibles/4", json={"notes": "## Test notes\n- item 1"})
+        assert r.status_code == 200
+        data = r.get_json()["data"]
+        assert data["notes"] == "## Test notes\n- item 1"
+
+    def test_cible_detail_includes_notes(self, client):
+        client.put("/api/cibles/4", json={"notes": "Some notes"})
+        r = client.get("/api/cibles/4/detail")
+        assert r.status_code == 200
+        data = r.get_json()["data"]
+        assert data["notes"] == "Some notes"
+
+    def test_create_cible_with_notes(self, client):
+        r = client.post("/api/cibles", json={"nom": "NotesCorp", "categorie": "entreprises", "notes": "Initial note"})
+        assert r.status_code == 201
+        data = r.get_json()["data"]
+        assert data["notes"] == "Initial note"
+
 
 class TestCibleExportCSV:
     """Tests for GET /api/cibles/export."""
