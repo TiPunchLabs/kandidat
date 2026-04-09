@@ -134,6 +134,7 @@ def api_cibles_create():
             email=payload.email,
             linkedin=payload.linkedin,
             inscrit_plateforme=payload.inscrit_plateforme,
+            notes=payload.notes,
         )
         resp = CibleResponse(
             id=cible.id,
@@ -146,6 +147,7 @@ def api_cibles_create():
             email=cible.email,
             linkedin=cible.linkedin,
             inscrit_plateforme=bool(cible.inscrit_plateforme),
+            notes=cible.notes,
         )
         return jsonify({"data": resp.model_dump()}), 201
     except Exception as e:
@@ -184,6 +186,7 @@ def api_cibles_update(cible_id):
             email=cible.email,
             linkedin=cible.linkedin,
             inscrit_plateforme=bool(cible.inscrit_plateforme),
+            notes=cible.notes,
         )
         return jsonify({"data": resp.model_dump()})
     except Exception as e:

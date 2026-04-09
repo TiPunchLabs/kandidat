@@ -235,6 +235,7 @@ class CibleDetailResponse(BaseModel):
     email: str
     linkedin: str
     inscrit_plateforme: bool
+    notes: str = ""
     contacts: list[ContactResponse] = []
     candidatures: list[dict] = []
 
@@ -249,6 +250,7 @@ class CibleCreate(BaseModel):
     email: str = ""
     linkedin: str = ""
     inscrit_plateforme: bool = False
+    notes: str = ""
 
     @field_validator("nom")
     @classmethod
@@ -278,6 +280,7 @@ class CibleUpdate(BaseModel):
     email: str | None = None
     linkedin: str | None = None
     inscrit_plateforme: bool | None = None
+    notes: str | None = None
 
     @field_validator("categorie")
     @classmethod
@@ -304,6 +307,7 @@ class CibleResponse(BaseModel):
     email: str
     linkedin: str
     inscrit_plateforme: bool
+    notes: str = ""
 
 
 class SettingValue(BaseModel):
