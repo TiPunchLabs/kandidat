@@ -470,6 +470,41 @@ class TestCibles:
         assert data["inscrit_plateforme"] is True
 
 
+class TestCibleExportCSV:
+    """Tests for GET /api/cibles/export."""
+
+    def test_export_csv_valid_category(self, client):
+        r = client.get("/api/cibles/export?categorie=entreprises")
+        assert r.status_code == 200
+        assert r.content_type == "text/csv; charset=utf-8"
+        assert "cibles-entreprises.csv" in r.headers["Content-Disposition"]
+        lines = r.data.decode("utf-8").strip().splitlines()
+        assert lines[0] == "nom,url,email,linkedin,contactee,inscrit_plateforme"
+        assert len(lines) == 4  # header + 3 entreprises
+
+    def test_export_csv_boolean_values(self, client):
+        r = client.get("/api/cibles/export?categorie=grands-groupes")
+        lines = r.data.decode("utf-8").strip().splitlines()
+        # Groupe SAFO is contactee=1 (position=1, second data row)
+        assert "Oui" in lines[2]
+        # Groupe GBH is contactee=0 (position=0, first data row)
+        assert "Non" in lines[1]
+
+    def test_export_csv_invalid_category(self, client):
+        r = client.get("/api/cibles/export?categorie=invalid")
+        assert r.status_code == 400
+
+    def test_export_csv_missing_category(self, client):
+        r = client.get("/api/cibles/export")
+        assert r.status_code == 400
+
+    def test_export_csv_empty_category(self, client):
+        r = client.get("/api/cibles/export?categorie=organisations")
+        assert r.status_code == 200
+        lines = r.data.decode("utf-8").strip().splitlines()
+        assert len(lines) == 1  # header only
+
+
 class TestCibleInscriptionToggle:
     """Tests for POST /api/cibles/<id>/toggle-inscription."""
 
