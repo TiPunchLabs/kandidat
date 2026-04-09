@@ -18,12 +18,20 @@
       <span>{{ cat_label }}</span>
       <span class="cible-counter">{{ contacted_count }}/{{ companies | length }}</span>
     </h5>
-    <button class="btn btn-secondary btn-sm" type="button"
-            style="padding:4px 10px;font-size:0.78rem"
-            onclick="event.stopPropagation(); openCibleModal('add', {categorie: '{{ cat_key }}'})">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Ajouter
-    </button>
+    <div style="display:flex;gap:6px">
+      <a class="btn btn-secondary btn-sm" href="{{ url_for('api.api_cibles_export', categorie=cat_key) }}"
+         style="padding:4px 10px;font-size:0.78rem;text-decoration:none"
+         onclick="event.stopPropagation()" title="Exporter en CSV">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        CSV
+      </a>
+      <button class="btn btn-secondary btn-sm" type="button"
+              style="padding:4px 10px;font-size:0.78rem"
+              onclick="event.stopPropagation(); openCibleModal('add', {categorie: '{{ cat_key }}'})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter
+      </button>
+    </div>
   </div>
   <div class="card-body cible-section-body" id="section-{{ cat_key }}">
     {% if companies %}

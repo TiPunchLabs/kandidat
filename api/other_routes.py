@@ -1,8 +1,10 @@
 """API endpoints for cibles, search, stats, and dashboard."""
 
+import csv
+import io
 import logging
 
-from flask import jsonify, request
+from flask import Response, jsonify, request
 from pydantic import ValidationError
 
 from api import api_bp
@@ -14,6 +16,7 @@ from services.candidature import (
     STATUTS,
     TYPES,
 )
+from services.cibles import CATEGORIES as CIBLE_CATEGORIES_TUPLE
 from services.cibles import (
     create_cible,
     create_contact,
@@ -27,6 +30,7 @@ from services.cibles import (
     update_contact,
 )
 from services.dashboard import regenerate_dashboard
+from services.database import Cible as CibleModel
 from services.database import Contact as ContactModel
 from services.database import db
 from services.schemas import CibleCreate, CibleResponse, CibleUpdate, ContactCreate, ContactUpdate
@@ -44,8 +48,6 @@ logger = logging.getLogger(__name__)
 @api_bp.doc(tags=["Statistiques"], summary="Get all enum values and status transitions")
 def api_enums():
     """Return all enum values, status transitions, and category mappings."""
-    from services.cibles import CATEGORIES as CIBLE_CATEGORIES
-
     return jsonify(
         {
             "data": {
@@ -53,7 +55,7 @@ def api_enums():
                 "types": TYPES,
                 "priorites": PRIORITES,
                 "categories_candidature": CATEGORIES,
-                "categories_cible": list(CIBLE_CATEGORIES),
+                "categories_cible": list(CIBLE_CATEGORIES_TUPLE),
                 "status_transitions": {k: sorted(v) for k, v in STATUS_TRANSITIONS.items()},
                 "cible_to_candidature_mapping": CIBLE_TO_CANDIDATURE_CATEGORIE,
             }
@@ -75,6 +77,39 @@ def api_cibles():
         return jsonify({"data": data})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@api_bp.route("/cibles/export", methods=["GET"])
+@api_bp.doc(tags=["Cibles"], summary="Export cibles as CSV filtered by category")
+def api_cibles_export():
+    """Export cibles for a given category as a CSV file."""
+    categorie = request.args.get("categorie", "")
+    if categorie not in CIBLE_CATEGORIES_TUPLE:
+        return jsonify({"error": f"Invalid category. Must be one of: {', '.join(CIBLE_CATEGORIES_TUPLE)}"}), 400
+
+    cibles = CibleModel.query.filter_by(categorie=categorie).order_by(CibleModel.position).all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["nom", "url", "email", "linkedin", "contactee", "inscrit_plateforme"])
+    for c in cibles:
+        writer.writerow(
+            [
+                c.nom,
+                c.url,
+                c.email,
+                c.linkedin,
+                "Oui" if c.contactee else "Non",
+                "Oui" if c.inscrit_plateforme else "Non",
+            ]
+        )
+
+    filename = f"cibles-{categorie}.csv"
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @api_bp.route("/cibles", methods=["POST"])
