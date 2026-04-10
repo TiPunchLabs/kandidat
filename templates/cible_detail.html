@@ -67,6 +67,33 @@
         {% include "partials/contacts_list.html" %}
       </div>
     </div>
+
+    <!-- Notes -->
+    <div class="card mb-3 animate-in">
+      <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+        <h5>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px;vertical-align:-2px">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <line x1="10" y1="9" x2="8" y2="9"/>
+          </svg>
+          Notes
+        </h5>
+      </div>
+      <div class="card-body" style="padding:0.65rem 1rem">
+        <div id="notes-display"
+             class="cible-notes-display"
+             title="Cliquez pour modifier"
+             style="cursor:pointer;min-height:2rem">
+        </div>
+        <textarea id="notes-editor"
+                  class="form-control cible-notes-editor"
+                  style="display:none;min-height:120px;font-family:monospace;font-size:0.85rem"
+                  placeholder="Ajoutez des notes en markdown...">{{ cible.notes or '' }}</textarea>
+      </div>
+    </div>
   </div>
 
   <!-- Side panel -->
@@ -348,6 +375,66 @@
         });
     });
   }
+
+  // --- Notes inline edit ---
+  (function() {
+    var display = document.getElementById('notes-display');
+    var editor = document.getElementById('notes-editor');
+    var cibleId = {{ cible.id }};
+    var currentNotes = editor.value;
+
+    function renderNotes(md) {
+      if (!md || !md.trim()) {
+        display.innerHTML = '<span style="color:var(--text-tertiary);font-size:0.82rem;font-style:italic">Cliquez pour ajouter une note...</span>';
+      } else {
+        display.innerHTML = DOMPurify.sanitize(marked.parse(md));
+      }
+    }
+
+    function showEditor() {
+      display.style.display = 'none';
+      editor.style.display = 'block';
+      editor.focus();
+      editor.setSelectionRange(editor.value.length, editor.value.length);
+    }
+
+    function hideEditor(save) {
+      var newNotes = editor.value;
+      editor.style.display = 'none';
+      display.style.display = 'block';
+      if (save && newNotes !== currentNotes) {
+        currentNotes = newNotes;
+        renderNotes(currentNotes);
+        fetch('/api/cibles/' + cibleId, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes: newNotes })
+        });
+      } else {
+        editor.value = currentNotes;
+        renderNotes(currentNotes);
+      }
+    }
+
+    display.addEventListener('click', showEditor);
+
+    editor.addEventListener('blur', function() {
+      hideEditor(true);
+    });
+
+    editor.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        hideEditor(false);
+      }
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        editor.blur();
+      }
+    });
+
+    renderNotes(currentNotes);
+  })();
 })();
 </script>
 {% endblock %}

@@ -7,7 +7,7 @@ from services.schemas import CibleResponse, ContactResponse
 
 CATEGORIES = ("grands-groupes", "esn", "entreprises", "cabinets", "organisations")
 
-_CIBLE_UPDATE_FIELDS = {"nom", "categorie", "url", "description", "email", "linkedin"}
+_CIBLE_UPDATE_FIELDS = {"nom", "categorie", "url", "description", "email", "linkedin", "notes"}
 
 _CONTACT_UPDATE_FIELDS = {"nom", "prenom", "email", "telephone", "linkedin", "fonction"}
 
@@ -55,6 +55,7 @@ def load_cibles() -> dict[str, list[dict]]:
                 email=row.email,
                 linkedin=row.linkedin,
                 inscrit_plateforme=bool(row.inscrit_plateforme),
+                notes=row.notes,
             )
             data = resp.model_dump()
             data["candidatures_count"] = counts.get(row.id, 0)
@@ -78,6 +79,7 @@ def list_all_cibles() -> list[dict]:
             email=row.email,
             linkedin=row.linkedin,
             inscrit_plateforme=bool(row.inscrit_plateforme),
+            notes=row.notes,
         ).model_dump()
         for row in rows
     ]
@@ -96,6 +98,7 @@ def create_cible(
     email: str = "",
     linkedin: str = "",
     inscrit_plateforme: bool = False,
+    notes: str = "",
 ) -> Cible:
     """Create a new cible at the last position in its category."""
     max_pos = db.session.query(db.func.max(Cible.position)).filter_by(categorie=categorie).scalar()
@@ -111,6 +114,7 @@ def create_cible(
         email=email,
         linkedin=linkedin,
         inscrit_plateforme=1 if inscrit_plateforme else 0,
+        notes=notes,
     )
     db.session.add(cible)
     db.session.commit()
@@ -251,6 +255,7 @@ def get_cible_detail(cible_id: int) -> dict | None:
         "email": cible.email,
         "linkedin": cible.linkedin,
         "inscrit_plateforme": bool(cible.inscrit_plateforme),
+        "notes": cible.notes,
         "contacts": contacts,
         "candidatures": candidatures,
     }

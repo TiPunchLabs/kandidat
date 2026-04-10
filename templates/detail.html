@@ -35,19 +35,17 @@
     <div class="card mb-3 animate-in resizable-card" id="contenu-card">
       <div class="card-header contenu-card-header">
         <h5>Contenu</h5>
-        <button type="button" class="btn-icon" id="contenu-edit-btn" title="Editer le contenu" aria-label="Editer le contenu">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-        </button>
       </div>
       <div class="card-body markdown-body" id="contenu-card-body">
-        {% if html_content %}
-        {{ html_content | safe }}
-        {% else %}
-        <p class="text-muted">Aucun contenu.</p>
-        {% endif %}
+        <div id="contenu-display"
+             class="cible-notes-display"
+             title="Cliquez pour modifier"
+             style="cursor:pointer;min-height:2rem">
+        </div>
+        <textarea id="contenu-editor"
+                  class="form-control"
+                  style="display:none;min-height:200px;font-family:monospace;font-size:0.85rem"
+                  placeholder="Contenu markdown...">{{ c.contenu or '' }}</textarea>
       </div>
     </div>
 
@@ -356,64 +354,64 @@ document.addEventListener('submit', function(e) {
   });
 })();
 
-/* --- Contenu edit (US2a) --- */
+/* --- Contenu inline edit --- */
 (function() {
+  var display = document.getElementById('contenu-display');
+  var editor = document.getElementById('contenu-editor');
   var slug = '{{ c.slug }}';
-  var contenuBody = document.getElementById('contenu-card-body');
-  var editBtn = document.getElementById('contenu-edit-btn');
-  if (!contenuBody || !editBtn) return;
+  var currentContenu = editor.value;
 
-  var originalContenuHTML = contenuBody.innerHTML;
-  var rawContenu = {{ c.contenu | tojson }};
-
-  function restoreContenu() {
-    contenuBody.innerHTML = originalContenuHTML;
-    editBtn.style.display = '';
+  function renderContenu(md) {
+    if (!md || !md.trim()) {
+      display.innerHTML = '<span style="color:var(--text-tertiary);font-size:0.82rem;font-style:italic">Cliquez pour ajouter du contenu...</span>';
+    } else {
+      display.innerHTML = DOMPurify.sanitize(marked.parse(md));
+    }
   }
 
-  editBtn.addEventListener('click', function() {
-    editBtn.style.display = 'none';
-    contenuBody.innerHTML = '<div class="contenu-edit">'
-      + '<textarea id="contenu-edit-textarea" rows="10" class="form-control" placeholder="Contenu markdown...">' + rawContenu.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea>'
-      + '<div class="contenu-edit-footer">'
-      + '<span></span>'
-      + '<div class="btn-group">'
-      + '<button type="button" class="btn btn-secondary btn-sm" id="contenu-cancel">Annuler</button>'
-      + '<button type="button" class="btn btn-primary btn-sm" id="contenu-save">Sauvegarder</button>'
-      + '</div></div></div>';
+  function showEditor() {
+    display.style.display = 'none';
+    editor.style.display = 'block';
+    editor.focus();
+    editor.setSelectionRange(editor.value.length, editor.value.length);
+  }
 
-    document.getElementById('contenu-cancel').addEventListener('click', restoreContenu);
-
-    document.getElementById('contenu-save').addEventListener('click', function() {
-      var saveBtn = this;
-      var textarea = document.getElementById('contenu-edit-textarea');
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Sauvegarde...';
+  function hideEditor(save) {
+    var newContenu = editor.value;
+    editor.style.display = 'none';
+    display.style.display = 'block';
+    if (save && newContenu !== currentContenu) {
+      currentContenu = newContenu;
+      renderContenu(currentContenu);
       fetch('/api/candidatures/' + slug, {
         method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({contenu: textarea.value})
-      })
-      .then(function(resp) {
-        if (!resp.ok) return resp.json().then(function(d) { throw new Error(d.error || 'Erreur'); });
-        return resp.json();
-      })
-      .then(function() {
-        window.location.reload();
-      })
-      .catch(function(err) {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Sauvegarder';
-        var errDiv = contenuBody.querySelector('.contenu-edit-error');
-        if (!errDiv) {
-          errDiv = document.createElement('div');
-          errDiv.className = 'contenu-edit-error alert alert-danger';
-          contenuBody.querySelector('.contenu-edit').appendChild(errDiv);
-        }
-        errDiv.textContent = err.message;
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contenu: newContenu })
       });
-    });
+    } else {
+      editor.value = currentContenu;
+      renderContenu(currentContenu);
+    }
+  }
+
+  display.addEventListener('click', showEditor);
+
+  editor.addEventListener('blur', function() {
+    hideEditor(true);
   });
+
+  editor.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      hideEditor(false);
+    }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      editor.blur();
+    }
+  });
+
+  renderContenu(currentContenu);
 })();
 
 /* --- Commentaire card via timeline dot click (US2b) --- */

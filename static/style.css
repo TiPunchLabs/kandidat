@@ -2446,3 +2446,20 @@ dialog.comment-modal::backdrop {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Notes inline widget */
+.cible-notes-display {
+  line-height: 1.5;
+  font-size: 0.88rem;
+}
+.cible-notes-display h1,
+.cible-notes-display h2,
+.cible-notes-display h3 {
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+.cible-notes-display h1 { font-size: 1.1rem; }
+.cible-notes-display p { margin-bottom: 0.4rem; }
+.cible-notes-display ul, .cible-notes-display ol { padding-left: 1.2rem; margin-bottom: 0.4rem; }
+.cible-notes-display code { font-size: 0.82rem; }

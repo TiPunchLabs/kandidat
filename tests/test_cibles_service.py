@@ -63,6 +63,16 @@ class TestCreateCible:
             assert cible.email == "contact@example.com"
             assert cible.linkedin == "https://linkedin.com/in/full"
 
+    def test_optional_notes_default_empty(self, app, data_dir):
+        with app.app_context():
+            cible = create_cible(nom="NoteTest Corp", categorie="entreprises")
+            assert cible.notes == ""
+
+    def test_create_with_notes(self, app, data_dir):
+        with app.app_context():
+            cible = create_cible(nom="NoteTest2 Corp", categorie="entreprises", notes="# Hello\nSome notes")
+            assert cible.notes == "# Hello\nSome notes"
+
 
 # ---------------------------------------------------------------------------
 # update_cible
@@ -105,6 +115,11 @@ class TestUpdateCible:
             # Should not raise — unknown fields are silently ignored
             result = update_cible(4, unknown_field="value")
             assert result is not None
+
+    def test_update_notes(self, app, data_dir):
+        with app.app_context():
+            result = update_cible(4, notes="## Updated notes")
+            assert result.notes == "## Updated notes"
 
 
 # ---------------------------------------------------------------------------
@@ -283,9 +298,16 @@ class TestGetCibleDetail:
                 "email",
                 "linkedin",
                 "inscrit_plateforme",
+                "notes",
             )
             for field in expected_fields:
                 assert field in detail
+
+    def test_detail_contains_notes(self, app, data_dir):
+        with app.app_context():
+            update_cible(4, notes="Some **markdown** notes")
+            detail = get_cible_detail(4)
+            assert detail["notes"] == "Some **markdown** notes"
 
 
 # ---------------------------------------------------------------------------

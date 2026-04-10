@@ -83,14 +83,15 @@ class TestDetail:
         assert "timeline-comment-indicator" in html
 
     def test_detail_contenu_card_always_visible(self, client):
-        """Detail page always shows the Contenu card, even when contenu is empty."""
+        """Detail page always shows the Contenu card with inline editor."""
         resp = client.get("/candidature/beta-inc")
         html = resp.data.decode()
         assert 'id="contenu-card"' in html
-        assert "Aucun contenu" in html
+        assert 'id="contenu-display"' in html
+        assert 'id="contenu-editor"' in html
 
     def test_detail_contenu_card_with_content(self, client, app):
-        """Detail page renders markdown contenu when present."""
+        """Detail page includes raw contenu in the inline editor textarea."""
         with app.app_context():
             from services.candidature import update_candidature
 
@@ -98,13 +99,14 @@ class TestDetail:
         resp = client.get("/candidature/acme-corp")
         html = resp.data.decode()
         assert 'id="contenu-card"' in html
-        assert "<strong>Important</strong>" in html
+        assert "**Important** notes" in html
 
-    def test_detail_contenu_edit_button(self, client):
-        """Detail page shows an edit button on the Contenu card."""
+    def test_detail_contenu_inline_editor(self, client):
+        """Detail page shows the inline contenu editor elements."""
         resp = client.get("/candidature/acme-corp")
         html = resp.data.decode()
-        assert 'id="contenu-edit-btn"' in html
+        assert 'id="contenu-display"' in html
+        assert 'id="contenu-editor"' in html
 
     def test_detail_historique_has_commentaire_html(self, client, app):
         """Timeline items include data-commentaire-html attribute."""

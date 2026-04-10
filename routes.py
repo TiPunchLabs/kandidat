@@ -76,7 +76,6 @@ def detail(slug):
     c = load_candidature(slug)
     if c is None:
         abort(404)
-    html_content = render_markdown(c["contenu"]) if c["contenu"] else ""
     historique = load_historique(slug)
     for h in historique:
         h["commentaire_html"] = render_markdown(h["commentaire"]) if h["commentaire"] else None
@@ -84,7 +83,6 @@ def detail(slug):
     return render_template(
         "detail.html",
         c=c,
-        html_content=html_content,
         historique=historique,
         statuts=STATUTS,
         priorites=PRIORITES,
@@ -544,6 +542,9 @@ def cible_detail_edit(cible_id):
     linkedin = request.form.get("linkedin")
     if linkedin is not None:
         fields["linkedin"] = linkedin.strip()
+    notes = request.form.get("notes")
+    if notes is not None:
+        fields["notes"] = notes
     if not fields:
         flash("Aucun champ a mettre a jour.", "danger")
         return redirect(url_for("main.cible_detail", cible_id=cible_id))
