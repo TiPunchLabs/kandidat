@@ -4,6 +4,18 @@ import io
 from pathlib import Path
 
 # ──────────────────────────────────────────────────────────────
+# Health check
+# ──────────────────────────────────────────────────────────────
+
+
+class TestHealth:
+    def test_health_returns_ok(self, client):
+        r = client.get("/health")
+        assert r.status_code == 200
+        assert r.get_json() == {"status": "ok"}
+
+
+# ──────────────────────────────────────────────────────────────
 # Candidatures CRUD
 # ──────────────────────────────────────────────────────────────
 

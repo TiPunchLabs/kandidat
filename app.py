@@ -73,6 +73,10 @@ def create_app() -> APIFlask:
     def internal_server_error(e):
         return render_template("500.html"), 500
 
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
+
     return app
 
 
