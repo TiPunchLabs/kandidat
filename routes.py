@@ -100,12 +100,11 @@ def fichier(slug, filename):
     if file_path.suffix.lower() == ".md":
         content = file_path.read_text(encoding="utf-8")
         html_content = render_markdown(content)
-    else:
-        html_content = None
+        return render_template(
+            "file_view.html", slug=slug, filename=filename, html_content=html_content, c=load_candidature(slug)
+        )
 
-    return render_template(
-        "file_view.html", slug=slug, filename=filename, html_content=html_content, c=load_candidature(slug)
-    )
+    return send_file(file_path)
 
 
 @bp.route("/candidature/<slug>/upload", methods=["POST"])
