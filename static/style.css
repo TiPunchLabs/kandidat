@@ -1425,6 +1425,16 @@ html.theme-transitioning *::after {
 .file-list-item a:hover {
   color: var(--accent);
 }
+.file-list-item .file-name-link {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.file-list-item .file-name-link:hover {
+  text-decoration: underline;
+}
 .file-list-item .file-type {
   font-family: var(--font-mono);
   font-size: 0.68rem;
@@ -1456,11 +1466,6 @@ html.theme-transitioning *::after {
   align-items: center;
   margin-left: auto;
   flex-shrink: 0;
-  opacity: 0;
-  transition: opacity var(--duration) ease-out;
-}
-.file-list-item:hover .file-actions {
-  opacity: 1;
 }
 
 .btn-delete-file {
@@ -1490,32 +1495,6 @@ html.theme-transitioning *::after {
   border-color: var(--danger-border);
   background: var(--danger-bg);
   color: var(--danger);
-}
-
-.btn-download {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: transparent;
-  cursor: pointer;
-  color: var(--text-tertiary);
-  transition: all var(--duration) ease-out;
-  flex-shrink: 0;
-  position: relative;
-}
-.btn-download::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-}
-.btn-download:hover {
-  border-color: var(--border);
-  background: var(--bg-subtle);
-  color: var(--accent);
 }
 
 /* --- Markdown content --- */
@@ -1790,8 +1769,7 @@ button.htmx-request::after {
 
 /* --- Touch devices: reveal hover-only elements --- */
 @media (hover: none) {
-  .cible-actions,
-  .file-actions {
+  .cible-actions {
     opacity: 1;
   }
 }
@@ -2082,11 +2060,6 @@ dialog.comment-modal::backdrop {
   }
   .detail-meta-table tr {
     padding: 0.35rem 0;
-  }
-
-  /* File actions always visible */
-  .file-actions {
-    opacity: 1;
   }
 
   /* File upload form stacked */
