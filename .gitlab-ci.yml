@@ -110,7 +110,7 @@ release:
     - if: $CI_COMMIT_TAG
 
 # =============================================================================
-# Deploy — via bastion runner + Ansible (main only, manual gate)
+# Deploy — via bastion runner + Ansible (main only, automatic on success)
 # =============================================================================
 deploy:
   stage: deploy
@@ -128,4 +128,4 @@ deploy:
     url: $DEPLOY_URL
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
+      when: on_success

@@ -249,11 +249,13 @@ def update(slug):
         for h in historique:
             h["commentaire_html"] = render_markdown(h["commentaire"]) if h["commentaire"] else None
         meta_html = render_template("partials/detail_meta.html", c=c)
-        timeline_html = render_template("partials/timeline.html", historique=historique)
+        # OOB swap: timeline partial carries hx-swap-oob on its own root (no extra
+        # wrapper) so the swap replaces #timeline-container in place instead of
+        # nesting a duplicate id inside it.
+        oob_timeline = render_template("partials/timeline.html", historique=historique, oob=True)
         flash_html = render_template("partials/flash.html")
-        # OOB swaps for timeline and header badge
+        # OOB swap for the header badge (sits outside the main swap target)
         statut = c["statut"]
-        oob_timeline = f'<div id="timeline-container" hx-swap-oob="outerHTML:#timeline-container">{timeline_html}</div>'
         oob_badge = (
             f'<span id="header-badge" class="badge badge-{statut}"'
             f' hx-swap-oob="outerHTML:#header-badge">{statut}</span>'

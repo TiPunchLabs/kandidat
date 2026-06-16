@@ -260,6 +260,26 @@ class TestUpdate:
             c = load_candidature("acme-corp")
             assert c["date_relance"] == "2025-11-01"
 
+    def test_update_htmx_response_single_timeline_container(self, client):
+        """HTMX update returns a single (non-nested) #timeline-container with an OOB swap.
+
+        Regression: the timeline partial was wrapped in a second div sharing the
+        same id, producing nested duplicate ids and detaching the comment-dot
+        delegation listener on swap.
+        """
+        resp = client.post(
+            "/candidature/acme-corp/update",
+            data={"statut": "relancee"},
+            headers={"HX-Request": "true"},
+        )
+        assert resp.status_code == 200
+        html = resp.data.decode()
+        assert html.count('id="timeline-container"') == 1
+        assert 'id="timeline-container" hx-swap-oob="true"' in html
+        # Header badge is swapped out-of-band too
+        assert 'id="header-badge"' in html
+        assert "hx-swap-oob" in html
+
 
 # ---------------------------------------------------------------------------
 # GET /candidature/new

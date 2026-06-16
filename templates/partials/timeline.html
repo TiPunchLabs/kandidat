@@ -1,4 +1,4 @@
-<div id="timeline-container">
+<div id="timeline-container"{% if oob|default(false) %} hx-swap-oob="true"{% endif %}>
   {% if historique %}
   <ol class="timeline">
     {% for h in historique %}

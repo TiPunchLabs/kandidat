@@ -310,22 +310,32 @@ document.addEventListener('submit', function(e) {
     return form.dataset.currentStatut;
   }
 
+  /* Pending htmx:confirm event held open while the comment modal is shown */
+  var pendingConfirm = null;
+
   textarea.addEventListener('input', function() {
     charCount.textContent = textarea.value.length + ' / 1000';
   });
 
-  form.addEventListener('submit', function(e) {
+  /*
+   * Gate the htmx request via htmx:confirm rather than the native submit event.
+   * htmx owns the submit event and issues the request before a plain submit
+   * listener could cancel it, so the modal must hook into htmx's own lifecycle.
+   * When the statut changes we hold the request open until the user confirms,
+   * then re-issue it with the commentaire attached. Otherwise htmx proceeds.
+   */
+  form.addEventListener('htmx:confirm', function(e) {
     var current = getCurrentStatut();
     var newStatut = statutSelect.value;
-    if (newStatut !== current) {
-      e.preventDefault();
-      transitionDiv.innerHTML = '<span class="badge badge-' + current + '">' + current + '</span>'
-        + ' <span class="timeline-arrow">&rarr;</span> '
-        + '<span class="badge badge-' + newStatut + '">' + newStatut + '</span>';
-      textarea.value = '';
-      charCount.textContent = '0 / 1000';
-      dialog.showModal();
-    }
+    if (newStatut === current) return;
+    e.preventDefault();
+    transitionDiv.innerHTML = '<span class="badge badge-' + current + '">' + current + '</span>'
+      + ' <span class="timeline-arrow">&rarr;</span> '
+      + '<span class="badge badge-' + newStatut + '">' + newStatut + '</span>';
+    textarea.value = '';
+    charCount.textContent = '0 / 1000';
+    pendingConfirm = e;
+    dialog.showModal();
   });
 
   confirmBtn.addEventListener('click', function() {
@@ -336,21 +346,31 @@ document.addEventListener('submit', function(e) {
     hidden.name = 'commentaire';
     hidden.value = textarea.value;
     form.appendChild(hidden);
+    var evt = pendingConfirm;
+    pendingConfirm = null;
     dialog.close();
-    if (typeof htmx !== 'undefined') {
-      htmx.trigger(form, 'submit');
-    } else {
-      form.submit();
+    if (evt) evt.detail.issueRequest(true);
+  });
+
+  /* Keep currentStatut in sync after a successful swap so a second change
+     in the same session shows the right transition and re-gates correctly. */
+  form.addEventListener('htmx:afterRequest', function(e) {
+    if (e.detail.successful) {
+      form.dataset.currentStatut = statutSelect.value;
     }
   });
 
   cancelBtn.addEventListener('click', function() {
     dialog.close();
-    statutSelect.value = getCurrentStatut();
   });
 
+  /* Revert the select on cancel / Esc; on confirm the dialog is already closed
+     and pendingConfirm cleared, so this only fires for an abandoned change. */
   dialog.addEventListener('close', function() {
-    statutSelect.value = getCurrentStatut();
+    if (pendingConfirm) {
+      pendingConfirm = null;
+      statutSelect.value = getCurrentStatut();
+    }
   });
 })();
 
@@ -541,8 +561,11 @@ document.addEventListener('submit', function(e) {
     });
   }
 
-  /* Event delegation: listen on the stable container, match .timeline-dot */
-  timelineContainer.addEventListener('click', function(e) {
+  /* Event delegation on document (not #timeline-container): the OOB status
+     update replaces #timeline-container wholesale, which would detach a
+     listener bound to it. document is never swapped, so dot clicks keep
+     working after an update. */
+  document.addEventListener('click', function(e) {
     var dot = e.target.closest('.timeline-dot');
     if (!dot) return;
 
@@ -568,7 +591,7 @@ document.addEventListener('submit', function(e) {
     showCommentRead(li, hId, comment, commentHtml, ancien, nouveau, date);
   });
 
-  timelineContainer.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function(e) {
     var dot = e.target.closest('.timeline-dot');
     if (!dot) return;
     if (e.key === 'Enter' || e.key === ' ') {
