@@ -27,18 +27,6 @@ mcp/dist/
 .specify/
 .playwright-mcp/
 
-# Terraform — GitLab
-gitlab-terraform/.terraform/
-gitlab-terraform/terraform.tfstate
-gitlab-terraform/terraform.tfstate.backup
-gitlab-terraform/*.tfvars
-
-# Terraform — GitHub
-github-terraform/.terraform/
-github-terraform/terraform.tfstate
-github-terraform/terraform.tfstate.backup
-github-terraform/*.tfvars
-
 # Claude Code
 CLAUDE.md
 .mcp.json
