@@ -4,7 +4,7 @@ stages:
   - security
   - build
   - release
-  - deploy
+  - bump
 
 workflow:
   rules:
@@ -110,22 +110,54 @@ release:
     - if: $CI_COMMIT_TAG
 
 # =============================================================================
-# Deploy — via bastion runner + Ansible (main only, automatic on success)
+# Bump — pin the new image SHA in the GitOps repo via an auto-merged MR
 # =============================================================================
-deploy:
-  stage: deploy
-  tags:
-    - bastion
-  image: null
+bump:
+  stage: bump
+  image: alpine:3.20
   cache: {}
-  before_script: []
+  before_script:
+    - apk add --no-cache git curl yq
   script:
-    - cd ~/homelab/dockhost
-    - ~/.local/bin/uv run ansible-playbook ansible/deploy.yml --tags kandidat
-      -e "kandidat_image_tag=$CI_COMMIT_SHORT_SHA"
-  environment:
-    name: production
-    url: $DEPLOY_URL
+    - |
+      set -euo pipefail
+      GITOPS_HOST="gitlab.com"
+      GITOPS_PATH="tipunchlabs/homelab-gitops"
+      BRANCH="bump/kandidat-${CI_COMMIT_SHORT_SHA}"
+      NEW_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+
+      git clone "https://oauth2:${HOMELAB_GITOPS_TOKEN}@${GITOPS_HOST}/${GITOPS_PATH}.git" gitops
+      cd gitops
+      git config user.email "ci@tipunchlabs"
+      git config user.name "kandidat-ci"
+      git checkout -b "${BRANCH}"
+
+      yq -i ".services.kandidat.image = \"${NEW_IMAGE}\"" kandidat/compose.yaml
+      git add kandidat/compose.yaml
+
+      if git diff --cached --quiet; then
+        echo "Image already at ${NEW_IMAGE}, nothing to bump."; exit 0
+      fi
+
+      git commit -m "chore(kandidat): bump image to ${CI_COMMIT_SHORT_SHA}"
+      git push origin "${BRANCH}"
+
+      # Open the MR with auto-remove of the source branch.
+      MR=$(curl -sf --request POST \
+        --header "PRIVATE-TOKEN: ${HOMELAB_GITOPS_TOKEN}" \
+        "${CI_API_V4_URL}/projects/${HOMELAB_GITOPS_PROJECT_ID}/merge_requests" \
+        --data "source_branch=${BRANCH}" \
+        --data "target_branch=main" \
+        --data "remove_source_branch=true" \
+        --data "title=chore(kandidat): bump image to ${CI_COMMIT_SHORT_SHA}")
+      IID=$(echo "$MR" | yq -p=json '.iid')
+
+      # Merge it (main is MR-only; the token merges via API — no pipeline on the gitops repo).
+      curl -sf --request PUT \
+        --header "PRIVATE-TOKEN: ${HOMELAB_GITOPS_TOKEN}" \
+        "${CI_API_V4_URL}/projects/${HOMELAB_GITOPS_PROJECT_ID}/merge_requests/${IID}/merge" \
+        --data "should_remove_source_branch=true"
+      echo "Merged MR !${IID} -> kandidat pinned to ${CI_COMMIT_SHORT_SHA}"
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: on_success
