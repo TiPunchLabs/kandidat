@@ -182,7 +182,7 @@ is free before starting the server.
 | Target | Description |
 | --- | --- |
 | `make mcp-dev` | Start MCP server pointing to local kandidat (`localhost:8000`) |
-| `make mcp-prod` | Start MCP server pointing to prod (`kandidat.internal`) |
+| `make mcp-prod` | Start MCP server pointing to prod (`https://kandidat.internal`) |
 
 Override the default port (3001) with the `MCP_PORT` variable:
 
