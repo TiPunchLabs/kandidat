@@ -21,6 +21,12 @@ import { registerEnumResources } from "./resources/enums.js";
 
 const PORT = parseInt(process.env.MCP_PORT || "3001", 10);
 
+// 127.0.0.1 par defaut : en developpement le serveur ne doit pas etre joignable
+// depuis le reseau. En conteneur il faut 0.0.0.0, sinon la publication de port
+// de Docker ne peut pas atteindre la loopback interne — le conteneur demarre,
+// journalise "listening", et refuse toute connexion.
+const HOST = process.env.MCP_HOST || "127.0.0.1";
+
 function createMcpServer(): McpServer {
   const server = new McpServer({
     name: "kandidat",
@@ -75,8 +81,8 @@ const httpServer = createServer(async (req, res) => {
   res.end(JSON.stringify({ error: "Not found" }));
 });
 
-httpServer.listen(PORT, "127.0.0.1", () => {
-  console.log(`kandidat MCP server listening on http://127.0.0.1:${PORT}/mcp`);
+httpServer.listen(PORT, HOST, () => {
+  console.log(`kandidat MCP server listening on http://${HOST}:${PORT}/mcp`);
   console.log(
     `kandidat API target: ${process.env.KANDIDAT_API_URL || "http://localhost:8000"}`
   );

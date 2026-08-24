@@ -25,6 +25,9 @@ variables:
   UV_CACHE_DIR: "$CI_PROJECT_DIR/.cache/uv"
   IMAGE_SHA: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}
   IMAGE_BRANCH: ${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}
+  # Le registry GitLab accepte les sous-chemins : pas de projet a creer.
+  MCP_IMAGE_SHA: ${CI_REGISTRY_IMAGE}/mcp:${CI_COMMIT_SHORT_SHA}
+  MCP_IMAGE_BRANCH: ${CI_REGISTRY_IMAGE}/mcp:${CI_COMMIT_REF_SLUG}
 
 # =============================================================================
 # Templates
@@ -98,6 +101,27 @@ build:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 # =============================================================================
+# Build MCP — image du serveur MCP (proxy semantique sur l'API)
+#
+# Image distincte et non un second process dans l'image applicative : le
+# serveur MCP est un CLIENT de l'API, il a son propre cycle de vie et peut
+# tomber sans emporter kandidat.
+# =============================================================================
+build-mcp:
+  stage: build
+  extends: .docker-job
+  script:
+    - echo "MCP_IMAGE_SHA=$MCP_IMAGE_SHA"
+    - docker build -t $MCP_IMAGE_SHA -t $MCP_IMAGE_BRANCH mcp/
+    - docker push $MCP_IMAGE_SHA
+    - docker push $MCP_IMAGE_BRANCH
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+# =============================================================================
 # Release — versioned image on git tag (v1.2.0)
 # =============================================================================
 release:
@@ -106,6 +130,15 @@ release:
   script:
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
+  rules:
+    - if: $CI_COMMIT_TAG
+
+release-mcp:
+  stage: release
+  extends: .docker-job
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/mcp:$CI_COMMIT_TAG mcp/
+    - docker push $CI_REGISTRY_IMAGE/mcp:$CI_COMMIT_TAG
   rules:
     - if: $CI_COMMIT_TAG
 
@@ -127,6 +160,7 @@ bump:
       GITOPS_PATH="tipunchlabs/homelab-gitops"
       BRANCH="bump/kandidat-${CI_COMMIT_SHORT_SHA}"
       NEW_IMAGE="${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA}"
+      NEW_MCP_IMAGE="${CI_REGISTRY_IMAGE}/mcp:${CI_COMMIT_SHORT_SHA}"
 
       git clone "https://oauth2:${HOMELAB_GITOPS_TOKEN}@${GITOPS_HOST}/${GITOPS_PATH}.git" gitops
       cd gitops
@@ -138,6 +172,16 @@ bump:
       test -f kandidat/compose.yaml || { echo "ERROR: kandidat/compose.yaml missing in homelab-gitops"; exit 1; }
 
       yq -i ".services.kandidat.image = \"${NEW_IMAGE}\"" kandidat/compose.yaml
+
+      # Le service MCP peut ne pas encore exister cote GitOps : le bump doit
+      # alors ne rien faire, surtout pas creer un stub. Notation entre crochets
+      # obligatoire — `.services.kandidat-mcp` serait lu comme une soustraction.
+      if yq -e '.services["kandidat-mcp"]' kandidat/compose.yaml >/dev/null 2>&1; then
+        yq -i ".services[\"kandidat-mcp\"].image = \"${NEW_MCP_IMAGE}\"" kandidat/compose.yaml
+      else
+        echo "Service kandidat-mcp absent du depot GitOps : bump MCP ignore."
+      fi
+
       git add kandidat/compose.yaml
 
       if git diff --cached --quiet; then
