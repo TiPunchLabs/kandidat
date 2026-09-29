@@ -136,7 +136,7 @@ docker compose --profile dev --profile ollama up
 
 Data is persisted in a `kandidat-data` Docker volume mounted at `/app/data`.
 
-Production is deployed on dockhost via the CI/CD pipeline (GitLab CI → bastion runner → Ansible playbook). See [docs/deployment.md](docs/deployment.md) for the full deployment architecture.
+Production runs on dockhost as a Komodo GitOps Stack: the CI `bump` job pins the new image SHA in `tipunchlabs/homelab-gitops`, and Komodo redeploys from there. See [docs/deployment.md](docs/deployment.md) for the full deployment architecture.
 
 ## MCP Server (LLM agent integration)
 

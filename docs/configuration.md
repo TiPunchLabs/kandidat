@@ -173,9 +173,7 @@ pnpm build
 cd mcp && KANDIDAT_API_URL=http://localhost:8000 pnpm dev
 
 # Prod (kandidat on dockhost)
-cd mcp && KANDIDAT_API_URL=http://kandidat.local:8000 pnpm dev
-# or
-cd mcp && KANDIDAT_API_URL=http://192.168.1.90:8000 pnpm dev
+cd mcp && KANDIDAT_API_URL=https://kandidat.internal NODE_OPTIONS=--use-system-ca pnpm dev
 ```
 
 ### Claude Desktop configuration
