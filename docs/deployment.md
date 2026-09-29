@@ -111,12 +111,34 @@ Both images are pinned to the **same SHA** on purpose: the MCP server mirrors th
 tool surface, so letting them drift apart would expose tools that no longer match the
 endpoints behind them.
 
-Required CI/CD variables on the kandidat project:
+Required CI/CD variables, defined in **kandidat → Settings → CI/CD → Variables**
+(project level, not group level, not managed by `gitlab-terraform/`):
 
-| Variable | Content |
-| --- | --- |
-| `HOMELAB_GITOPS_TOKEN` | Project access token on homelab-gitops (role Maintainer, scopes `api` + `write_repository`). Masked + protected. |
-| `HOMELAB_GITOPS_PROJECT_ID` | Numeric ID of homelab-gitops, used for the MR API calls |
+| Variable | Content | Flags |
+| --- | --- | --- |
+| `HOMELAB_GITOPS_TOKEN` | Value of the personal access token `kandidat-bump` (scopes `api` + `write_repository`) | masked, protected, scope `*` |
+| `HOMELAB_GITOPS_PROJECT_ID` | Numeric ID of homelab-gitops, used for the MR API calls | masked, protected, scope `*` |
+
+```text
+User Settings → Access tokens          kandidat → Settings → CI/CD → Variables
+┌──────────────────────────┐   copy    ┌──────────────────────────────────────┐
+│ PAT "kandidat-bump"      │ ────────► │ HOMELAB_GITOPS_TOKEN = glpat-…       │
+│ expires 2027-08-22       │   value   │ masked ✓  protected ✓  scope *       │
+└──────────────────────────┘           └──────────────────────────────────────┘
+                                                        │
+                                                        ▼
+                                         `bump` job in .gitlab-ci.yml
+```
+
+- **Protected** means the variable is only injected in pipelines on protected branches
+  (`main`), which is also why MR pipelines never bump.
+- **Rotation**: generate a new token in *User Settings → Access tokens*, then paste its
+  value into the kandidat variable. Nothing else changes.
+- The token is a **personal** access token: it acts with the owner's full GitLab rights,
+  not only on homelab-gitops. A project access token on homelab-gitops would narrow the
+  blast radius, but likely requires a paid GitLab.com tier.
+- The variable exists only in the GitLab UI: it cannot be rebuilt from code if the project
+  is recreated.
 
 > ⚠️ **Warning**: if the token expires, `bump` fails at `git clone` with
 > `HTTP Basic: Access denied`. Everything before it stays green and prod silently stays on
