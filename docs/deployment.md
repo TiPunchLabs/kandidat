@@ -3,17 +3,33 @@
 ## Mental model
 
 ```text
-Developer          GitLab CI                Bastion (192.168.1.60)        Dockhost (192.168.1.90)
-─────────          ─────────                ──────────────────────        ───────────────────────
-git push   ──►   lint/test/security
-  main             build image ──► registry.gitlab.com/tipunchlabs/kandidat:<sha>
-                   deploy (manual) ──► SSH ──► ansible-playbook ──► SSH ──► docker pull + run
-                                                  --tags kandidat
-                                                  -e image_tag=<sha>
+kandidat repo (GitLab CI)            homelab-gitops repo                 dockhost (192.168.10.90)
+─────────────────────────            ───────────────────                 ────────────────────────
+git push main
+  lint / test / security
+  build     ──► registry.gitlab.com/tipunchlabs/kandidat:<sha>
+  build-mcp ──► registry.gitlab.com/tipunchlabs/kandidat/mcp:<sha>
+  bump  ──► MR "bump image to <sha>" ──► auto-merged into main
+            (edits kandidat/compose.yaml)       │
+                                                ▼
+                                   CI trigger-komodo-kandidat
+                                   (bastion runner, LAN)  ──► POST Komodo listener
+                                                                     │
+                                                                     ▼
+                                                        Komodo pulls homelab-gitops
+                                                        docker compose up (Stack kandidat)
 ```
 
-The deploy is a **manual gate** on the `main` branch. Nothing reaches production without
-an explicit click in GitLab CI.
+- **Source of truth**: `kandidat/compose.yaml` in the private repo
+  [`tipunchlabs/homelab-gitops`](https://gitlab.com/tipunchlabs/homelab-gitops).
+  What runs in prod is whatever image SHA is pinned there.
+- **No manual gate**: every push to `main` of kandidat ends in production if all
+  stages pass. MR pipelines build images but never bump.
+- **Rollback** = `git revert` of the bump commit in homelab-gitops.
+
+> 💡 **Note**: the previous deployment (bastion runner → `ansible-playbook --tags kandidat`
+> → `docker compose up`) is gone. Ansible now only does host prep, see
+> [Ansible role (host prep only)](#ansible-role-host-prep-only).
 
 ------
 
@@ -21,75 +37,196 @@ an explicit click in GitLab CI.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────┐
-│  Dockhost VM (192.168.1.90)                                          │
-│  3 cores, 10 GB RAM, 100 GB SSD                                     │
+│  dockhost VM (192.168.10.90)                                         │
 │                                                                      │
-│  Docker network: db-net (external, shared)                           │
+│  Komodo Core + Periphery (listener on :9120)                         │
 │                                                                      │
-│  ┌──────────────────────┐    ┌──────────────────────────────────┐    │
-│  │  postgresql           │    │  kandidat                        │    │
-│  │  postgres:17.4        │    │  registry.gitlab.com/            │    │
-│  │  port: 5432           │◄───│    tipunchlabs/kandidat:<sha>   │    │
-│  │  data: /app/data/     │    │  port: 8000                     │    │
-│  │    postgresql/        │    │  data: /app/data/kandidat/      │    │
-│  │  config: /opt/        │    │  config: /opt/kandidat/         │    │
-│  │    postgresql/config/ │    │    docker-compose.yml            │    │
-│  └──────────────────────┘    └──────────────────────────────────┘    │
-│                                                                      │
-│  UFW: 22 (SSH), 5432 (PostgreSQL), 8000 (kandidat)                  │
+│  Stack "kandidat" — Docker network: kandidat-net                     │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌───────────────────┐   │
+│  │ kandidat         │  │ kandidat-mcp     │  │ db (kandidat-db)  │   │
+│  │ kandidat:<sha>   │◄─│ kandidat/mcp:    │  │ postgres:17       │   │
+│  │ port 8000        │  │   <sha>          │  │ volume kandidat-db│   │
+│  │ /app/data/       │──┼──────────────────┼─►│ port 5432 (intern)│   │
+│  │   kandidat (bind)│  │ port 3001        │  │                   │   │
+│  └──────────────────┘  └──────────────────┘  └───────────────────┘   │
+└──────────────────────────────────────────────────────────────────────┘
+          ▲ :8000                   ▲ :3001
+┌─────────┴─────────────────────────┴──────────────────────────────────┐
+│  Caddy (192.168.10.70) — TLS internal                                │
+│  https://kandidat.internal      → 192.168.10.90:8000                 │
+│  https://kandidat-mcp.internal  → 192.168.10.90:3001                 │
 └──────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────┐
-│  Bastion VM (192.168.1.60)                                           │
-│  GitLab Runner (shell executor, tags: bastion, homelab, shell)       │
-│  ~/homelab/ — cloned repo with Ansible playbooks + roles             │
-│  Secrets via pass + GPG (Ansible vault password, registry tokens)    │
+│  bastion-60 — GitLab Runner (shell, tag: bastion)                    │
+│  Only used by homelab-gitops CI to reach the Komodo listener on the  │
+│  LAN. Komodo is never exposed to the Internet.                       │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
 ------
 
-## CI/CD pipeline
+## CI/CD pipeline (kandidat repo)
 
 Defined in `.gitlab-ci.yml`. Uses `workflow:rules` to ensure one pipeline per event.
 
 ### Stages
 
-| Stage | Runner | Trigger | What it does |
-| --- | --- | --- | --- |
-| **lint** | GitLab instance | MR + main push | `ruff check .` + `ruff format --check .` |
-| **test** | GitLab instance | MR + main push | `pytest` with coverage (SQLite in-memory) |
-| **security** | GitLab instance | MR + main push | `bandit` code scanning |
-| **build** | GitLab instance (docker:dind) | MR + main push | Build Docker image, push to registry with commit SHA tag |
-| **release** | GitLab instance (docker:dind) | Git tag only | Re-tag image with version tag |
-| **deploy** | Bastion (self-hosted) | Main only, **manual gate** | Ansible playbook on bastion → dockhost |
+| Stage | Job | Runner | Trigger | What it does |
+| --- | --- | --- | --- | --- |
+| **lint** | `lint` | GitLab instance | MR + main | `ruff check .` + `ruff format --check .` |
+| **test** | `test` | GitLab instance | MR + main | `pytest` with coverage (SQLite in-memory) |
+| **security** | `security` | GitLab instance | MR + main | `bandit` code scanning |
+| **build** | `build` | GitLab instance (docker:dind) | MR + main | App image, tags `<short-sha>` + `<branch-slug>` |
+| **build** | `build-mcp` | GitLab instance (docker:dind) | MR + main | MCP image from `mcp/`, same tags under `/mcp` |
+| **release** | `release`, `release-mcp` | GitLab instance (docker:dind) | Git tag only | Build + push `:<tag>` for both images |
+| **bump** | `bump` | GitLab instance (alpine) | main only, `on_success` | Pin both images to `<short-sha>` in homelab-gitops |
 
 ### Image tagging
 
-| Event | Tag pushed to registry |
-| --- | --- |
-| Push to main | `registry.gitlab.com/tipunchlabs/kandidat:<short-sha>` |
-| Push to MR branch | `registry.gitlab.com/tipunchlabs/kandidat:<branch-slug>` |
-| Git tag (e.g. `v1.2.0`) | `registry.gitlab.com/tipunchlabs/kandidat:v1.2.0` |
+| Event | App image | MCP image |
+| --- | --- | --- |
+| Push to main / MR | `kandidat:<short-sha>` + `kandidat:<branch-slug>` | `kandidat/mcp:<short-sha>` + `kandidat/mcp:<branch-slug>` |
+| Git tag (e.g. `v1.2.0`) | `kandidat:v1.2.0` | `kandidat/mcp:v1.2.0` |
 
-### Deploy job
+All images live under `registry.gitlab.com/tipunchlabs/`.
 
-```yaml
-deploy:
-  stage: deploy
-  tags: [bastion]            # runs on bastion-60 self-hosted runner
-  when: manual               # requires manual click in GitLab UI
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-  script:
-    - cd ~/homelab/dockhost
-    - ~/.local/bin/uv run ansible-playbook ansible/deploy.yml
-        --tags kandidat
-        -e "kandidat_image_tag=$CI_COMMIT_SHORT_SHA"
+### Bump job
+
+The `bump` job is the only link between kandidat and production:
+
+```text
+1. git clone homelab-gitops (with HOMELAB_GITOPS_TOKEN)
+2. checkout -b bump/kandidat-<sha>
+3. guard: kandidat/compose.yaml must exist (never create a stub)
+4. yq: services.kandidat.image      = kandidat:<sha>
+       services["kandidat-mcp"].image = kandidat/mcp:<sha>   (only if the service exists)
+5. no diff → exit 0 ("nothing to bump")
+6. commit "chore(kandidat): bump image to <sha>", push
+7. open MR via GitLab API (remove_source_branch=true)
+8. merge MR via API (3 attempts, 5 s apart)
 ```
 
-The `kandidat_image_tag` variable overrides the Ansible default (`main`) with the
-specific commit SHA that was built in the build stage.
+Both images are pinned to the **same SHA** on purpose: the MCP server mirrors the API's
+tool surface, so letting them drift apart would expose tools that no longer match the
+endpoints behind them.
+
+Required CI/CD variables, defined in **kandidat → Settings → CI/CD → Variables**
+(project level, not group level, not managed by `gitlab-terraform/`):
+
+| Variable | Content | Flags |
+| --- | --- | --- |
+| `HOMELAB_GITOPS_TOKEN` | Value of the personal access token `kandidat-bump` (scopes `api` + `write_repository`) | masked, protected, scope `*` |
+| `HOMELAB_GITOPS_PROJECT_ID` | Numeric ID of homelab-gitops, used for the MR API calls | masked, protected, scope `*` |
+
+```text
+User Settings → Access tokens          kandidat → Settings → CI/CD → Variables
+┌──────────────────────────┐   copy    ┌──────────────────────────────────────┐
+│ PAT "kandidat-bump"      │ ────────► │ HOMELAB_GITOPS_TOKEN = glpat-…       │
+│ expires 2027-08-22       │   value   │ masked ✓  protected ✓  scope *       │
+└──────────────────────────┘           └──────────────────────────────────────┘
+                                                        │
+                                                        ▼
+                                         `bump` job in .gitlab-ci.yml
+```
+
+- **Protected** means the variable is only injected in pipelines on protected branches
+  (`main`), which is also why MR pipelines never bump.
+- **Rotation**: generate a new token in *User Settings → Access tokens*, then paste its
+  value into the kandidat variable. Nothing else changes.
+- The token is a **personal** access token: it acts with the owner's full GitLab rights,
+  not only on homelab-gitops. A project access token on homelab-gitops would narrow the
+  blast radius, but likely requires a paid GitLab.com tier.
+- The variable exists only in the GitLab UI: it cannot be rebuilt from code if the project
+  is recreated.
+
+> ⚠️ **Warning**: if the token expires, `bump` fails at `git clone` with
+> `HTTP Basic: Access denied`. Everything before it stays green and prod silently stays on
+> the previous SHA. There is no alerting on this job — check it when a change does not
+> seem to reach prod.
+
+------
+
+## GitOps side (homelab-gitops repo)
+
+### Stack layout
+
+```text
+homelab-gitops/
+├── .gitlab-ci.yml          # trigger-komodo-<stack> jobs
+└── kandidat/
+    ├── compose.yaml        # the Stack Komodo deploys (image SHAs pinned here)
+    ├── .env.example        # names of the secrets expected by the Stack
+    └── README.md
+```
+
+### Deploy trigger
+
+A push to `main` touching `kandidat/**` runs the `trigger-komodo-kandidat` job on the
+bastion runner. It POSTs a minimal GitLab push payload (`{"ref":"refs/heads/main"}`) to:
+
+```text
+http://192.168.10.90:9120/listener/gitlab/stack/<STACK_ID>/deploy
+Header X-Gitlab-Token: $KOMODO_WEBHOOK_SECRET
+```
+
+Komodo validates the secret, pulls the repo and runs `docker compose up` for the Stack.
+Any change to `main` (bump MR, manual edit, `git revert`) triggers a reconcile.
+
+### Services in the Stack
+
+| Service | Image | Port | Notes |
+| --- | --- | --- | --- |
+| `kandidat` | `registry.gitlab.com/tipunchlabs/kandidat:<sha>` | 8000 | Healthcheck `curl http://localhost:8000/`, waits for `db` healthy |
+| `kandidat-mcp` | `registry.gitlab.com/tipunchlabs/kandidat/mcp:<sha>` | 3001 | `KANDIDAT_API_URL=http://kandidat:8000` (compose network), waits for `kandidat` healthy |
+| `db` | `postgres:17` | internal | Dedicated to kandidat, volume `kandidat-db`, healthcheck `pg_isready` |
+
+Environment of the app container:
+
+```yaml
+SECRET_KEY: "${SECRET_KEY}"
+KANDIDAT_ENV: "prod"
+FT_DATA_DIR: "/app/data"
+DATABASE_URL: "postgresql+psycopg://kandidat:${DB_PASSWORD}@db:5432/kandidat"
+```
+
+`DATABASE_URL` uses `db` as hostname (compose service DNS on `kandidat-net`).
+
+### Data
+
+| Data | Location |
+| --- | --- |
+| PostgreSQL | Named volume `kandidat-db` (dedicated container, not the shared `postgresql` one) |
+| Files (candidatures markdown, CVs) | Host bind mount `/app/data/kandidat` → `/app/data` |
+
+------
+
+## Secrets management
+
+| Secret | Stored in | Used by |
+| --- | --- | --- |
+| `SECRET_KEY` | Komodo Core → Settings → Secrets | App container `SECRET_KEY` |
+| `DB_PASSWORD` | Komodo Core → Settings → Secrets | `db` container + app `DATABASE_URL` |
+| Registry pull credentials | Komodo (group registry account) | Image pull by Komodo |
+| `KOMODO_WEBHOOK_SECRET` | homelab-gitops CI/CD variable (masked) | `trigger-komodo-kandidat` job |
+| `HOMELAB_GITOPS_TOKEN` | kandidat CI/CD variable (masked + protected) | `bump` job |
+
+Nothing secret is committed to homelab-gitops; `kandidat/.env.example` only lists the names.
+
+------
+
+## Ansible role (host prep only)
+
+`homelab/dockhost/ansible/roles/kandidat/` no longer deploys anything. It does not log in
+to the registry and does not run `docker compose`. What it still does:
+
+- create the `/app/data/kandidat` bind-mount directory, owned by UID/GID 1000 (the
+  non-root container user);
+- create the `kandidat` user and database in the **shared** `postgresql` container.
+
+> ⚠️ **Warning**: the Stack uses its own `db` container, not the shared `postgresql`
+> one. The PostgreSQL part of the role therefore looks like a leftover of the Ansible
+> era; the bind-mount directory is the part that still matters.
 
 ------
 
@@ -100,7 +237,7 @@ Multi-stage build defined in `Dockerfile`:
 ```text
 ┌─────────────────────────────┐
 │  Builder (python:3.12-slim) │
-│  + uv (from ghcr.io)       │
+│  + uv (from ghcr.io)        │
 │  uv sync --frozen --no-dev  │
 │  → /app/.venv               │
 └──────────────┬──────────────┘
@@ -108,7 +245,7 @@ Multi-stage build defined in `Dockerfile`:
                ▼
 ┌─────────────────────────────┐
 │  Runtime (python:3.12-slim) │
-│  + libpango, libcairo,     │
+│  + libpango, libcairo,      │
 │    libharfbuzz, fonts       │
 │  User: kandidat (1000:1000) │
 │  CMD: gunicorn              │
@@ -120,229 +257,39 @@ Multi-stage build defined in `Dockerfile`:
 ```
 
 System dependencies (libpango, libcairo, libharfbuzz) are required for WeasyPrint
-(PDF generation).
-
-------
-
-## Ansible deployment
-
-### What happens when deploy runs
-
-The Ansible playbook `dockhost/ansible/deploy.yml` with `--tags kandidat` executes
-the `kandidat` role:
-
-```text
-1. PostgreSQL setup (idempotent)
-   ├── Check if user 'kandidat' exists in postgresql container
-   ├── CREATE USER kandidat (if missing)
-   ├── Check if database 'kandidat' exists
-   └── CREATE DATABASE kandidat (if missing)
-
-2. Application directories
-   ├── /opt/kandidat/ (docker-compose location)
-   └── /app/data/kandidat/ (persistent data, UID 1000)
-
-3. Registry authentication
-   └── docker login registry.gitlab.com (deploy token from vault)
-
-4. Container deployment
-   ├── Render docker-compose.yml from template (with image tag + vault secrets)
-   ├── docker compose up -d (pull: always, recreate: auto)
-   └── Wait for healthcheck: curl http://localhost:8000/ (10 retries, 3s delay)
-```
-
-### Ansible role: kandidat
-
-```text
-dockhost/ansible/roles/kandidat/
-├── defaults/main.yml       # Default variables (registry, ports, paths)
-├── tasks/main.yml          # Main task sequence
-├── handlers/main.yml       # Restart handler
-└── templates/
-    └── docker-compose.yml.j2   # Docker Compose template with vault refs
-```
-
-Key defaults:
-
-| Variable | Default | Overridden by |
-| --- | --- | --- |
-| `kandidat_registry` | `registry.gitlab.com/tipunchlabs/kandidat` | — |
-| `kandidat_image_tag` | `main` | CI deploy job (`-e kandidat_image_tag=<sha>`) |
-| `kandidat_port` | `8000` | — |
-| `kandidat_data_dir` | `/app/data/kandidat` | — |
-| `kandidat_uid` | `1000` | — |
-
-### Docker Compose on dockhost
-
-Rendered from Jinja2 template to `/opt/kandidat/docker-compose.yml`:
-
-```yaml
-services:
-  kandidat:
-    image: registry.gitlab.com/tipunchlabs/kandidat:<sha>
-    container_name: kandidat
-    restart: always
-    ports:
-      - "8000:8000"
-    environment:
-      SECRET_KEY: "<from vault>"
-      KANDIDAT_ENV: "prod"
-      FT_DATA_DIR: "/app/data"
-      DATABASE_URL: "<from vault>"    # postgresql+psycopg://kandidat:***@postgresql:5432/kandidat
-    volumes:
-      - /app/data/kandidat:/app/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    networks:
-      - db-net
-
-networks:
-  db-net:
-    external: true
-```
-
-Note: the `DATABASE_URL` uses `postgresql` as hostname (Docker container DNS on `db-net`),
-not `192.168.1.90` or `localhost`.
-
-------
-
-## PostgreSQL
-
-Deployed by the `postgresql` Ansible role, also on dockhost.
-
-| Setting | Value |
-| --- | --- |
-| Image | `postgres:17.4` (pinned by digest) |
-| Port | 5432 (exposed on dockhost) |
-| Data | `/app/data/postgresql/` (persistent) |
-| Config | `/opt/postgresql/config/postgresql.conf` + `pg_hba.conf` |
-| Network | `db-net` (shared with kandidat) |
-| Max connections | 100 |
-| Shared buffers | 256MB |
-
-### Access control (pg_hba.conf)
-
-| Source | Auth method |
-| --- | --- |
-| Local (unix socket) | trust |
-| Loopback (127.0.0.1) | trust |
-| Docker network (172.0.0.0/8) | md5 |
-| Homelab subnet (192.168.1.0/24) | md5 |
-| All others | reject |
-
-### Database and user
-
-Created by the `kandidat` Ansible role (not the `postgresql` role):
-
-```sql
-CREATE USER kandidat WITH PASSWORD '<vault_kandidat_db_password>';
-CREATE DATABASE kandidat OWNER kandidat ENCODING 'UTF8';
-```
-
-------
-
-## Secrets management
-
-All secrets are stored in **Ansible Vault** (encrypted YAML files) and injected at deploy time.
-
-| Secret | Vault variable | Used by |
-| --- | --- | --- |
-| Flask secret key | `vault_kandidat_secret_key` | kandidat container `SECRET_KEY` |
-| Database URL | `vault_kandidat_database_url` | kandidat container `DATABASE_URL` |
-| DB user password | `vault_kandidat_db_password` | PostgreSQL `CREATE USER` |
-| Registry username | `vault_kandidat_registry_user` | `docker login` (deploy token) |
-| Registry password | `vault_kandidat_registry_password` | `docker login` (deploy token) |
-| PostgreSQL superuser pwd | `vault_postgresql_password` | PostgreSQL container `POSTGRES_PASSWORD` |
-
-Vault files location: `dockhost/ansible/group_vars/dockhost/vault/config.yml`
-
-The vault password is stored in `pass` on the bastion VM, loaded via `.envrc`:
-```bash
-export ANSIBLE_VAULT_PASSWORD=$(pass ansible/vault)
-```
-
-------
-
-## Network and firewall
-
-### Docker network
-
-```text
-db-net (external bridge network)
-├── postgresql (hostname: postgresql, port 5432)
-└── kandidat   (hostname: kandidat, port 8000)
-```
-
-The `db-net` network is created as a pre-task in the dockhost deploy playbook
-(`docker network create db-net`). Both containers join it.
-
-### UFW rules on dockhost
-
-| Port | Protocol | Purpose |
-| --- | --- | --- |
-| 22 | TCP | SSH access |
-| 5432 | TCP | PostgreSQL (homelab access) |
-| 8000 | TCP | kandidat web application |
+(PDF generation). The MCP server image is built separately from `mcp/Dockerfile`, see
+[mcp/README.md](../mcp/README.md).
 
 ------
 
 ## How to deploy
 
-### Standard deploy (via CI)
+### Standard deploy
 
-1. Push to `main` (or merge an MR)
-2. Wait for lint/test/security/build to pass
-3. Click the **manual deploy button** in GitLab CI
-4. The bastion runner executes the Ansible playbook
-5. Dockhost pulls the new image and restarts the container
+1. Merge an MR into `main` (or push to `main`).
+2. lint / test / security / build / build-mcp pass.
+3. `bump` opens and merges `chore(kandidat): bump image to <sha>` in homelab-gitops.
+4. homelab-gitops CI calls the Komodo listener; Komodo redeploys the Stack.
 
-### Manual deploy (from bastion)
+### Pin a specific image by hand
 
-SSH into the bastion and run directly:
-
-```bash
-cd ~/homelab/dockhost
-~/.local/bin/uv run ansible-playbook ansible/deploy.yml \
-    --tags kandidat \
-    -e "kandidat_image_tag=<commit-sha>"
-```
+In homelab-gitops, on a branch, edit `kandidat/compose.yaml` (both `image:` lines,
+same SHA), then open an MR. Merging it to `main` triggers the deploy.
 
 ### Rollback
 
-Deploy a previous commit SHA:
-
 ```bash
-cd ~/homelab/dockhost
-~/.local/bin/uv run ansible-playbook ansible/deploy.yml \
-    --tags kandidat \
-    -e "kandidat_image_tag=<previous-sha>"
+cd homelab-gitops
+git switch -c revert/kandidat-<sha>
+git revert <bump-commit>          # restores the previous pinned SHA
+git push -u origin revert/kandidat-<sha>
+# open the MR, merge it → Komodo redeploys the previous image
 ```
 
-All previously built images are available in the GitLab Container Registry.
+All previously built images stay available in the GitLab Container Registry.
 
-------
-
-## Homelab code sync
-
-The bastion's copy of `~/homelab/` is kept in sync with GitLab via a CI job in the
-homelab repo itself:
-
-```yaml
-# homelab/.gitlab-ci.yml
-sync-bastion:
-  tags: [bastion]
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
-  script:
-    - cd ~/homelab && git fetch origin main && git reset --hard origin/main
-```
-
-This means any change to Ansible roles or playbooks pushed to the homelab repo is
-automatically synced to the bastion before the next deploy.
+> ⚠️ **Warning**: the next push to kandidat `main` will bump again and overwrite the
+> revert. Fix forward in kandidat, or hold merges until the fix lands.
 
 ------
 
@@ -388,39 +335,34 @@ terraform apply
 
 ## Troubleshooting
 
-### Check container status on dockhost
+### A change does not reach prod
 
-```bash
-ssh dockhost-90
-docker ps                           # running containers
-docker logs kandidat --tail 50      # app logs
-docker logs postgresql --tail 50    # db logs
-```
-
-### Check database connectivity
-
-```bash
-ssh dockhost-90
-docker exec postgresql pg_isready -U kandidat -d kandidat
-```
-
-### Force pull and restart
-
-```bash
-ssh bastion-60
-cd ~/homelab/dockhost
-~/.local/bin/uv run ansible-playbook ansible/deploy.yml --tags kandidat
-```
+1. Check the `bump` job of the kandidat `main` pipeline (expired `HOMELAB_GITOPS_TOKEN`
+   is the usual suspect).
+2. Check the pinned SHA in homelab-gitops `kandidat/compose.yaml`.
+3. Check the `trigger-komodo-kandidat` job in homelab-gitops (HTTP code returned by
+   the listener).
+4. Check the Stack in the Komodo UI.
 
 ### View deployed image tag
 
 ```bash
 ssh dockhost-90
-docker inspect kandidat --format '{{ .Config.Image }}'
+docker inspect kandidat kandidat-mcp --format '{{ .Name }} {{ .Config.Image }}'
+```
+
+### Container and database status
+
+```bash
+ssh dockhost-90
+docker ps --filter name=kandidat
+docker logs kandidat --tail 50
+docker logs kandidat-mcp --tail 50
+docker exec kandidat-db pg_isready -U kandidat -d kandidat
 ```
 
 ------
 
 > **Document created on**: 2026-03-16
 > **Author**: Claude (from infrastructure code analysis), Xavier Gueret (review)
-> **Version**: 1.0
+> **Version**: 2.0 — 2026-09-29: rewritten for the Komodo GitOps deployment (bump → homelab-gitops → Komodo)

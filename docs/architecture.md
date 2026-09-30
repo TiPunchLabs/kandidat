@@ -220,10 +220,11 @@ providing all valid enum values and status transitions to the LLM context.
 
 ### Configuration
 
-The MCP server always runs **locally** (on the developer's machine). Only the API target
-changes depending on the environment:
+Run locally, the MCP server only needs an API target, which changes with the environment.
+In prod it is also deployed next to the app as `kandidat-mcp` (`https://kandidat-mcp.internal`),
+see [deployment.md](deployment.md).
 
 | Environment | `KANDIDAT_API_URL` | Use case |
 | --- | --- | --- |
 | Dev local | `http://localhost:8000` | kandidat running via `uv run` or docker-compose |
-| Prod dockhost | `http://kandidat.local:8000` or `http://192.168.1.90:8000` | kandidat deployed on dockhost |
+| Prod dockhost | `https://kandidat.internal` (Caddy) or `http://192.168.10.90:8000` | kandidat deployed on dockhost |
